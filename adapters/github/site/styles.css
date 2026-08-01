@@ -148,6 +148,171 @@ main {
   gap: 12px;
 }
 
+.builder-card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+
+.builder-head {
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.builder-head h2 {
+  margin: 0 0 4px;
+  font-size: 18px;
+}
+
+.builder-grid {
+  display: grid;
+  grid-template-columns: minmax(320px, 0.95fr) minmax(360px, 1.05fr);
+  gap: 0;
+}
+
+.builder-form,
+.builder-output {
+  padding: 16px;
+}
+
+.builder-form {
+  border-right: 1px solid var(--border);
+}
+
+.form-row {
+  display: grid;
+  gap: 10px;
+}
+
+.form-row.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.form-row.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+label {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  margin-bottom: 10px;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  margin-top: 5px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--fg);
+  padding: 9px 10px;
+  font: inherit;
+  font-size: 14px;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 70px;
+}
+
+.label-note {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.checkline {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  line-height: 1.35;
+}
+
+.checkline input {
+  width: auto;
+  margin-top: 1px;
+}
+
+.button-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.primary-action,
+.secondary-action {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  min-height: 36px;
+  padding: 0 12px;
+  color: var(--fg);
+  cursor: pointer;
+}
+
+.primary-action {
+  background: var(--fg);
+  color: var(--bg);
+  border-color: var(--fg);
+}
+
+.secondary-action {
+  background: var(--surface-2);
+}
+
+.secondary-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.output-block {
+  margin-bottom: 12px;
+}
+
+#job-path,
+#yaml-output {
+  display: block;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  padding: 10px;
+}
+
+#yaml-output {
+  min-height: 260px;
+  margin: 5px 0 0;
+  white-space: pre;
+  font-size: 12px;
+}
+
+.help-text {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--muted);
+  padding: 10px;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.instructions {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-2);
+  padding: 12px;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.instructions ol {
+  margin: 8px 0 0;
+  padding-left: 20px;
+}
+
+.instructions li + li {
+  margin-top: 4px;
+}
+
 .job-card {
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -308,6 +473,10 @@ footer {
     margin-top: 0;
   }
   .summary-grid { grid-template-columns: repeat(2, minmax(140px, 1fr)); }
+  .builder-grid { grid-template-columns: 1fr; }
+  .builder-form { border-right: 0; border-bottom: 1px solid var(--border); }
+  .form-row.two,
+  .form-row.three { grid-template-columns: 1fr; }
   .job-main { grid-template-columns: 1fr; }
   .actions { justify-content: flex-start; }
   .detail-grid { grid-template-columns: 1fr; }

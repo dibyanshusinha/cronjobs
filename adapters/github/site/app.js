@@ -97,6 +97,261 @@ function duration(ms) {
   return `${(ms / 1000).toFixed(1)} s`;
 }
 
+function slugify(value) {
+  return String(value || "new-job")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 128) || "new-job";
+}
+
+function yamlString(value) {
+  const text = String(value ?? "");
+  if (/^[A-Za-z0-9_./:@-]+$/.test(text)) return text;
+  return JSON.stringify(text);
+}
+
+function parseStatusList(value) {
+  return String(value || "200")
+    .split(/[,\s]+/)
+    .map((part) => Number.parseInt(part, 10))
+    .filter((num) => Number.isInteger(num) && num >= 100 && num <= 599);
+}
+
+function parseHeaders(value) {
+  const headers = [];
+  for (const line of String(value || "").split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    const idx = trimmed.indexOf(":");
+    if (idx <= 0) continue;
+    headers.push([trimmed.slice(0, idx).trim(), trimmed.slice(idx + 1).trim()]);
+  }
+  return headers;
+}
+
+function formData() {
+  const form = document.getElementById("job-builder");
+  return Object.fromEntries(new FormData(form).entries());
+}
+
+function buildJobYaml(data) {
+  const id = slugify(data.id);
+  const lines = [
+    `id: ${id}`,
+    `name: ${yamlString(data.name || id)}`,
+    `enabled: true`,
+    `schedule: ${yamlString(data.schedule || "*/15 * * * *")}`,
+    `timezone: ${yamlString(data.timezone || viewerTimeZone())}`,
+    `type: ${data.type}`,
+    `retries: ${Number.parseInt(data.retries || "0", 10)}`,
+    `history_retention_days: ${Number.parseInt(data.retention || "365", 10)}`,
+    `failure_policy:`,
+    `  auto_disable_after_consecutive_failures: ${Number.parseInt(data.auto_disable || "5", 10)}`,
+    `  initial_backoff_seconds: 300`,
+    `  backoff_multiplier: 2`,
+    `  max_backoff_seconds: 21600`,
+  ];
+
+  if (data.type === "http") {
+    const statuses = parseStatusList(data.expected_status);
+    lines.push(`http:`);
+    lines.push(`  method: ${data.method || "GET"}`);
+    lines.push(`  url: ${yamlString(data.url || "https://example.com")}`);
+    lines.push(`  expected_status: [${(statuses.length ? statuses : [200]).join(", ")}]`);
+    const headers = parseHeaders(data.headers);
+    if (headers.length) {
+      lines.push(`  headers:`);
+      for (const [key, value] of headers) lines.push(`    ${key}: ${yamlString(value)}`);
+    }
+    if (data.body) {
+      lines.push(`  body: |-`);
+      for (const line of String(data.body).split(/\r?\n/)) lines.push(`    ${line}`);
+    }
+  } else {
+    const args = String(data.args || "")
+      .split(/\s+/)
+      .map((arg) => arg.trim())
+      .filter(Boolean);
+    lines.push(`script:`);
+    lines.push(`  path: ${yamlString(data.script_path || "scripts/examples/backup_check.sh")}`);
+    lines.push(`  interpreter: ${data.interpreter || "bash"}`);
+    if (args.length) lines.push(`  args: [${args.map(yamlString).join(", ")}]`);
+  }
+  return `${lines.join("\n")}\n`;
+}
+
+function jobFilePath(data) {
+  const folder = String(data.folder || "").trim().replace(/^\/+|\/+$/g, "");
+  const safeFolder = folder
+    .split("/")
+    .map((part) => slugify(part))
+    .filter(Boolean)
+    .join("/");
+  return `jobs/${safeFolder ? `${safeFolder}/` : ""}${slugify(data.id)}.job.yml`;
+}
+
+function cronValues(field, min, max) {
+  const values = new Set();
+  for (const part of field.split(",")) {
+    const [rangePart, stepPart] = part.split("/");
+    const step = stepPart ? Number.parseInt(stepPart, 10) : 1;
+    let start = min;
+    let end = max;
+    if (rangePart !== "*") {
+      if (rangePart.includes("-")) {
+        const [a, b] = rangePart.split("-").map((x) => Number.parseInt(x, 10));
+        start = a;
+        end = b;
+      } else {
+        start = Number.parseInt(rangePart, 10);
+        end = start;
+      }
+    }
+    if (!Number.isFinite(start) || !Number.isFinite(end) || !Number.isFinite(step) || step < 1) return null;
+    for (let value = start; value <= end; value += step) {
+      if (value >= min && value <= max) values.add(value);
+    }
+  }
+  return values;
+}
+
+function zonedParts(date, timeZone) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    weekday: "short",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(date);
+  const get = (type) => parts.find((part) => part.type === type)?.value;
+  const weekdays = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+  return {
+    minute: Number.parseInt(get("minute"), 10),
+    hour: Number.parseInt(get("hour"), 10),
+    day: Number.parseInt(get("day"), 10),
+    month: Number.parseInt(get("month"), 10),
+    dow: weekdays[get("weekday")],
+  };
+}
+
+function cronMatches(date, schedule, timeZone) {
+  const parts = String(schedule || "").trim().split(/\s+/);
+  if (parts.length !== 5) return false;
+  const [minute, hour, dom, month, dow] = [
+    cronValues(parts[0], 0, 59),
+    cronValues(parts[1], 0, 23),
+    cronValues(parts[2], 1, 31),
+    cronValues(parts[3], 1, 12),
+    cronValues(parts[4], 0, 7),
+  ];
+  if (!minute || !hour || !dom || !month || !dow) return false;
+  const local = zonedParts(date, timeZone || viewerTimeZone());
+  const day = local.dow;
+  return (
+    minute.has(local.minute) &&
+    hour.has(local.hour) &&
+    dom.has(local.day) &&
+    month.has(local.month) &&
+    (dow.has(day) || (day === 0 && dow.has(7)))
+  );
+}
+
+function simulateRuns(schedule, timeZone, limit = 8) {
+  const runs = [];
+  const cursor = new Date();
+  cursor.setUTCSeconds(0, 0);
+  cursor.setUTCMinutes(cursor.getUTCMinutes() + 1);
+  for (let i = 0; i < 366 * 24 * 60 && runs.length < limit; i += 1) {
+    if (cronMatches(cursor, schedule, timeZone)) runs.push(new Date(cursor));
+    cursor.setUTCMinutes(cursor.getUTCMinutes() + 1);
+  }
+  return runs;
+}
+
+function updateBuilder() {
+  const data = formData();
+  document.getElementById("http-fields").hidden = data.type !== "http";
+  document.getElementById("script-fields").hidden = data.type !== "script";
+  if (data.preset && data.preset !== "custom") {
+    document.querySelector('[name="schedule"]').value = data.preset;
+    data.schedule = data.preset;
+  }
+  if (!document.querySelector('[name="timezone"]').value) {
+    document.querySelector('[name="timezone"]').value = viewerTimeZone();
+    data.timezone = viewerTimeZone();
+  }
+  document.getElementById("job-path").textContent = jobFilePath(data);
+  document.getElementById("yaml-output").textContent = buildJobYaml(data);
+  document.getElementById("test-job").disabled = data.type !== "http";
+}
+
+function simulateBuilderSchedule() {
+  const data = formData();
+  const runs = simulateRuns(data.schedule, data.timezone || viewerTimeZone());
+  const output = document.getElementById("schedule-output");
+  if (!runs.length) {
+    output.textContent = "Could not simulate this expression in the browser. The dispatcher still validates it with the Node scheduler.";
+    return;
+  }
+  output.innerHTML = runs
+    .map((run) => `<div>${renderTime(run.toISOString(), data.timezone || viewerTimeZone())}</div>`)
+    .join("");
+}
+
+async function testBuilderJob() {
+  const data = formData();
+  const output = document.getElementById("test-output");
+  if (data.type !== "http") {
+    output.textContent = "Script jobs cannot run from the static dashboard. Paste the YAML, then run npm run validate.";
+    return;
+  }
+  if (!document.querySelector('[name="send_test"]').checked) {
+    output.textContent = "Check the opt-in box first. The test sends one real request from your browser/network IP.";
+    return;
+  }
+  output.textContent = "Testing...";
+  const started = performance.now();
+  try {
+    const response = await fetch(data.url, {
+      method: data.method || "GET",
+      headers: Object.fromEntries(parseHeaders(data.headers)),
+      body: data.body && !["GET", "HEAD"].includes(data.method) ? data.body : undefined,
+      cache: "no-store",
+    });
+    const elapsed = Math.round(performance.now() - started);
+    const ok = parseStatusList(data.expected_status).includes(response.status);
+    output.innerHTML = `${badge(ok ? "success" : "failed")} <span class="detail">HTTP ${response.status} in ${elapsed} ms from this browser. Scheduled runs will come from GitHub Actions.</span>`;
+  } catch (err) {
+    output.innerHTML = `${badge("failed")} <span class="detail">${escapeHtml(err.message || String(err))}. Browser tests may fail because of CORS even when the dispatcher can call the URL from GitHub Actions.</span>`;
+  }
+}
+
+async function copyBuilderYaml() {
+  const yaml = document.getElementById("yaml-output").textContent;
+  const output = document.getElementById("test-output");
+  try {
+    await navigator.clipboard.writeText(yaml);
+    output.textContent = "YAML copied.";
+  } catch (err) {
+    output.textContent = "Copy failed. Select the YAML block and copy it manually.";
+  }
+}
+
+function initBuilder() {
+  const form = document.getElementById("job-builder");
+  if (!form) return;
+  form.addEventListener("input", updateBuilder);
+  form.addEventListener("change", updateBuilder);
+  document.getElementById("simulate-job").addEventListener("click", simulateBuilderSchedule);
+  document.getElementById("test-job").addEventListener("click", testBuilderJob);
+  document.getElementById("copy-yaml").addEventListener("click", copyBuilderYaml);
+  updateBuilder();
+}
+
 function effectiveStatus(job) {
   if (!job.enabled || job.auto_disabled) return "disabled";
   if (job.failure_pause_until_utc && new Date(job.failure_pause_until_utc) > new Date()) return "paused";
@@ -223,6 +478,7 @@ function renderJobs(jobs) {
 
 async function main() {
   initTheme();
+  initBuilder();
   document.getElementById("viewer-tz").textContent = `Browser timezone: ${viewerTimeZone()}`;
   try {
     const response = await fetch(DATA_URL, { cache: "no-store" });
