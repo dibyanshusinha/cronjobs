@@ -7,34 +7,139 @@
 <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <header>
-    <h1>Cron Dispatcher</h1>
-    <div id="heartbeat" class="heartbeat">loading…</div>
+  <header class="topbar">
+    <div>
+      <h1>Cron Dispatcher</h1>
+      <p id="generated" class="subtle">Loading dashboard data...</p>
+    </div>
+    <div class="top-actions">
+      <button id="theme-toggle" class="icon-button" type="button" title="Switch theme" aria-label="Switch theme">☾</button>
+      <div id="heartbeat" class="heartbeat unknown">No heartbeat yet</div>
+    </div>
   </header>
 
   <main>
-    <div id="meta" class="meta"></div>
-    <table id="jobs-table">
-      <thead>
-        <tr>
-          <th class="col-expand"></th>
-          <th>Job</th>
-          <th>Type</th>
-          <th>Schedule</th>
-          <th>Last run</th>
-          <th>Status</th>
-          <th>Next due</th>
-        </tr>
-      </thead>
-      <tbody id="jobs-body">
-        <tr><td colspan="7">Loading…</td></tr>
-      </tbody>
-    </table>
+    <section id="summary" class="summary-grid" aria-label="Summary"></section>
+    <section class="builder-card" aria-labelledby="builder-title">
+      <div class="builder-head">
+        <div>
+          <h2 id="builder-title">Create a New Job</h2>
+          <p class="subtle">Build a job file, preview its schedule, and copy the YAML into the repo.</p>
+        </div>
+      </div>
+      <div class="builder-grid">
+        <form id="job-builder" class="builder-form">
+          <div class="form-row two">
+            <label>Job ID<input name="id" value="my-public-job" required /></label>
+            <label>Name<input name="name" value="My public job" /></label>
+          </div>
+          <div class="form-row two">
+            <label>Folder under jobs/<input name="folder" value="examples" /></label>
+            <label>Timezone<input name="timezone" /></label>
+          </div>
+          <div class="form-row two">
+            <label>Type
+              <select name="type">
+                <option value="http">HTTP request</option>
+                <option value="script">Script</option>
+              </select>
+            </label>
+            <label>Schedule
+              <select name="preset">
+                <option value="*/5 * * * *">Every 5 minutes</option>
+                <option value="*/15 * * * *">Every 15 minutes</option>
+                <option value="0 * * * *">Hourly</option>
+                <option value="0 3 * * *">Daily at 03:00</option>
+                <option value="0 9 * * 1">Mondays at 09:00</option>
+                <option value="custom">Custom</option>
+              </select>
+            </label>
+          </div>
+          <label>Cron expression<input name="schedule" value="*/15 * * * *" /></label>
+
+          <div id="http-fields" class="type-fields">
+            <div class="form-row two">
+              <label>Method
+                <select name="method">
+                  <option>GET</option>
+                  <option>POST</option>
+                  <option>PUT</option>
+                  <option>PATCH</option>
+                  <option>DELETE</option>
+                  <option>HEAD</option>
+                </select>
+              </label>
+              <label>Expected status codes<input name="expected_status" value="200" /></label>
+            </div>
+            <label>URL<input name="url" value="https://httpbin.org/status/200" /></label>
+            <label>Headers <span class="label-note">one per line: Name: value</span><textarea name="headers" rows="3"></textarea></label>
+            <label>Body<textarea name="body" rows="3"></textarea></label>
+          </div>
+
+          <div id="script-fields" class="type-fields" hidden>
+            <div class="form-row two">
+              <label>Script path<input name="script_path" value="scripts/examples/backup_check.sh" /></label>
+              <label>Interpreter
+                <select name="interpreter">
+                  <option>bash</option>
+                  <option>node</option>
+                  <option>python3</option>
+                </select>
+              </label>
+            </div>
+            <label>Arguments <span class="label-note">space separated</span><input name="args" value="--verbose" /></label>
+          </div>
+
+          <div class="form-row three">
+            <label>Retries<input name="retries" type="number" min="0" max="20" value="2" /></label>
+            <label>Auto-disable after failures<input name="auto_disable" type="number" min="1" max="100" value="5" /></label>
+            <label>History retention days<input name="retention" type="number" min="1" max="3650" value="365" /></label>
+          </div>
+          <label class="checkline"><input name="send_test" type="checkbox" /> Allow one browser test request to the HTTP URL. The target will see this browser/network IP, not a GitHub runner IP.</label>
+          <div class="button-row">
+            <button type="button" id="simulate-job" class="primary-action">Simulate schedule</button>
+            <button type="button" id="test-job" class="secondary-action">Test HTTP</button>
+            <button type="button" id="copy-yaml" class="secondary-action">Copy YAML</button>
+          </div>
+        </form>
+
+        <div class="builder-output">
+          <div class="output-block">
+            <span class="field-label">Create this file</span>
+            <code id="job-path">jobs/examples/my-public-job.job.yml</code>
+          </div>
+          <div class="output-block">
+            <span class="field-label">Job YAML</span>
+            <pre id="yaml-output"></pre>
+          </div>
+          <div class="output-block">
+            <span class="field-label">Next runs</span>
+            <div id="schedule-output" class="help-text">No simulation yet.</div>
+          </div>
+          <div class="output-block">
+            <span class="field-label">Test result</span>
+            <div id="test-output" class="help-text">HTTP tests run directly from your browser, so the receiving service sees your browser/network IP. Scheduled jobs still run from GitHub Actions unless you use a self-hosted runner.</div>
+          </div>
+          <div class="instructions">
+            <strong>How to add it</strong>
+            <ol>
+              <li>Create the shown `.job.yml` file in your repo.</li>
+              <li>Paste the generated YAML into that file.</li>
+              <li>Run <code>npm run validate</code>.</li>
+              <li>Commit and push. The dispatcher will pick it up on the next run.</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section id="jobs" class="jobs-grid" aria-label="Jobs">
+      <div class="empty-state">Loading jobs...</div>
+    </section>
   </main>
 
   <footer>
-    <p>Generated by the dispatcher on every run. Source: <a href="https://github.com" id="repo-link">repo</a>.</p>
-    <p class="tz-note">Times shown in each job's configured timezone and your browser's local timezone (<span id="viewer-tz"></span>) when they differ. Hover a time, or expand a job, for the exact UTC instant.</p>
+    <span id="viewer-tz"></span>
+    <a href="https://github.com/dibyanshusinha/cronjobs" rel="noopener noreferrer">Source repository</a>
   </footer>
 
   <script src="app.js"></script>

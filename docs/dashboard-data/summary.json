@@ -1,20 +1,33 @@
 {
-  "generated_at": "2026-08-01T23:16:00.820682Z",
+  "generated_at": "2026-08-01T23:54:00.292Z",
   "heartbeat": {
-    "detail": "1 executed, 2 skipped",
-    "last_run_utc": "2026-08-01T23:16:00.820682Z",
-    "status": "ok"
+    "last_run_utc": "2026-08-01T23:54:00.292Z",
+    "status": "ok",
+    "detail": "1 executed, 1 skipped"
   },
   "jobs": [
     {
-      "consecutive_failures": 0,
-      "enabled": true,
       "id": "example-backup-check",
+      "name": "Example: backup check script",
+      "type": "script",
+      "enabled": true,
+      "auto_disabled": false,
+      "auto_disabled_reason": null,
+      "failure_pause_until_utc": null,
+      "schedule": "0 3 * * *",
+      "timezone": "UTC",
+      "history_retention_days": 365,
+      "failure_policy": {
+        "auto_disable_after_consecutive_failures": 5,
+        "initial_backoff_seconds": 300,
+        "backoff_multiplier": 2,
+        "max_backoff_seconds": 21600
+      },
       "last_evaluated_utc": "2026-08-01T22:54:28.860405Z",
       "last_status": "success",
       "last_trigger": "manual",
-      "name": "Example: backup check script",
-      "next_due_utc": "2026-08-02T03:00:00Z",
+      "consecutive_failures": 0,
+      "next_due_utc": "2026-08-02T03:00:00.000Z",
       "open_issue": null,
       "recent_history": [
         {
@@ -39,20 +52,30 @@
           "status": "success",
           "trigger": "manual"
         }
-      ],
-      "schedule": "0 3 * * *",
-      "timezone": "UTC",
-      "type": "script"
+      ]
     },
     {
-      "consecutive_failures": 0,
-      "enabled": true,
       "id": "example-http-ping",
-      "last_evaluated_utc": "2026-08-01T23:16:01.554957Z",
+      "name": "Example: ping httpbin",
+      "type": "http",
+      "enabled": true,
+      "auto_disabled": false,
+      "auto_disabled_reason": null,
+      "failure_pause_until_utc": null,
+      "schedule": "*/15 * * * *",
+      "timezone": "Asia/Kolkata",
+      "history_retention_days": 365,
+      "failure_policy": {
+        "auto_disable_after_consecutive_failures": 5,
+        "initial_backoff_seconds": 300,
+        "backoff_multiplier": 2,
+        "max_backoff_seconds": 21600
+      },
+      "last_evaluated_utc": "2026-08-01T23:54:01.782Z",
       "last_status": "success",
       "last_trigger": "scheduled",
-      "name": "Example: ping httpbin",
-      "next_due_utc": "2026-08-01T23:30:00Z",
+      "consecutive_failures": 0,
+      "next_due_utc": "2026-08-02T00:00:00.000Z",
       "open_issue": null,
       "recent_history": [
         {
@@ -100,15 +123,36 @@
           "started_at": "2026-08-01T23:16:01.533794Z",
           "status": "success",
           "trigger": "scheduled"
+        },
+        {
+          "job_id": "example-http-ping",
+          "scheduled_time": "2026-08-01T23:30:00.000Z",
+          "status": "skipped",
+          "started_at": null,
+          "finished_at": null,
+          "duration_ms": null,
+          "attempts": 0,
+          "detail": "skipped by misfire policy (a more recent occurrence ran instead)",
+          "trigger": "scheduled",
+          "run_url": null
+        },
+        {
+          "job_id": "example-http-ping",
+          "scheduled_time": "2026-08-01T23:45:00.000Z",
+          "status": "success",
+          "started_at": "2026-08-01T23:54:01.318Z",
+          "finished_at": "2026-08-01T23:54:01.782Z",
+          "duration_ms": 464,
+          "attempts": 1,
+          "detail": "HTTP 200",
+          "trigger": "scheduled",
+          "run_url": "https://github.com/dibyanshusinha/cronjobs/actions/runs/30724201235"
         }
-      ],
-      "schedule": "*/15 * * * *",
-      "timezone": "Asia/Kolkata",
-      "type": "http"
+      ]
     }
   ],
   "meta": {
-    "failing_jobs": 0,
-    "total_jobs": 2
+    "total_jobs": 2,
+    "failing_jobs": 0
   }
 }
