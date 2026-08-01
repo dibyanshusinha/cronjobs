@@ -45,6 +45,18 @@
       "started_at": "2026-08-01T23:16:01.533794Z",
       "status": "success",
       "trigger": "scheduled"
+    },
+    {
+      "job_id": "example-http-ping",
+      "scheduled_time": "2026-08-01T23:30:00.000Z",
+      "status": "skipped",
+      "started_at": null,
+      "finished_at": null,
+      "duration_ms": null,
+      "attempts": 0,
+      "detail": "skipped by misfire policy (a more recent occurrence ran instead)",
+      "trigger": "scheduled",
+      "run_url": null
     }
   ]
 }
