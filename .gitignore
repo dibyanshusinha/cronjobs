@@ -1,3 +1,6 @@
+node_modules/
+npm-debug.log*
+coverage/
 __pycache__/
 *.pyc
 .pytest_cache/

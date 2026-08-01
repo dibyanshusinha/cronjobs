@@ -5,12 +5,18 @@ on:
     paths:
       - "jobs/**"
       - "schema/**"
-      - "engine/**"
+      - "src/**"
+      - "adapters/github/site/**"
+      - "package.json"
+      - "package-lock.json"
   pull_request:
     paths:
       - "jobs/**"
       - "schema/**"
-      - "engine/**"
+      - "src/**"
+      - "adapters/github/site/**"
+      - "package.json"
+      - "package-lock.json"
 
 permissions:
   contents: read
@@ -21,10 +27,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-node@v4
         with:
-          python-version: "3.12"
+          node-version: "20"
+          cache: "npm"
 
-      - run: pip install -r requirements.txt
+      - run: npm ci
 
-      - run: python -m engine.validate_cli
+      - run: npm run validate
+
+      - run: npm test

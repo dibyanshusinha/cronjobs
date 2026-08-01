@@ -34,13 +34,14 @@ jobs:
       - name: Checkout main
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
-          python-version: "3.12"
+          node-version: "20"
+          cache: "npm"
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: npm ci
 
       - name: Prepare cron-state worktree
         run: |
@@ -73,4 +74,4 @@ jobs:
           JOB_ID: ${{ github.event.inputs.job_id }}
           FORCE_DISABLED: ${{ github.event.inputs.force_disabled }}
           MAX_CONCURRENCY: "5"
-        run: python -m adapters.github.run_dispatcher
+        run: npm run dispatch:github

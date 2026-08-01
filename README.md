@@ -1,126 +1,140 @@
 # cronjobs
 
-A self-hosted alternative to cron-job.org that runs entirely on GitHub — no
-third-party service, no cost. Define jobs as YAML files; a GitHub Actions
-workflow polls every 5 minutes and runs whatever's due; results show up on a
-GitHub Pages dashboard and failures open a GitHub Issue.
+A GitHub-native alternative to cron-job.org for public, non-sensitive jobs.
+Define cron jobs as YAML files; a GitHub Actions workflow polls every 5 minutes
+and runs whatever is due; results show up on a GitHub Pages dashboard and
+failures open a GitHub Issue.
+
+The dispatcher is now a Node.js project, so local development uses `npm`
+instead of Python tooling.
 
 ## Is this the right fit for your job?
 
-**This edition is public.** It's built to run in a public GitHub repo (so
-Actions minutes are unlimited/free — a private repo's 2,000 free minutes/month
-would be exhausted by 5-minute polling). That means:
+**This edition is public.** It's built to run in a public GitHub repo so Actions
+minutes are unlimited/free. That means:
 
-- Job names, URLs, schedules, and script contents are all visible to anyone.
-- GitHub Secrets keep secret *values* hidden — you can reference
-  `${MY_SECRET}` in an HTTP job's headers and it's substituted at execution
-  time, never committed in plaintext — but the job's existence, its target
-  URL, and its schedule are still public.
-- Don't put anything here you wouldn't want publicly known: internal
-  hostnames, non-obvious admin endpoints, etc.
+- Job names, URLs, schedules, and script contents are visible to anyone.
+- GitHub Secrets keep secret values hidden. You can reference `${MY_SECRET}` in
+  an HTTP job's headers and substitute it at execution time, but the job's
+  existence, target URL, and schedule are still public.
+- Do not put internal hostnames, private admin endpoints, private scripts, or
+  sensitive execution metadata in this public repo.
 
-If your jobs themselves need to be private, this isn't the right mode for
-them — see [Self-hosted mode](#self-hosted-mode-designed-for-not-built) below.
+If your jobs themselves need secrecy, use this repository only as the public
+runner/software project and keep private jobs in a future standalone deployment.
 
 ## Architecture
 
+```text
+src/engine/       core scheduling, validation, executors, retry/history logic
+src/adapters/     GitHub-specific runtime glue
+adapters/github/site/
+                  static dashboard shell copied to cron-state:/docs
 ```
-engine/      core — scheduling, validation, executors, retry/history logic.
-             Zero GitHub-specific imports. Fully unit-testable (tests/) with
-             no network access and no GitHub Actions needed.
-adapters/    GitHub-specific glue: git commits to the cron-state branch,
-             GitHub Issues notifications, the Pages dashboard shell.
+
+The core does not import GitHub-specific code. It depends on small interfaces:
+
+- a JSON-like state backend, currently `JsonFileStateBackend`;
+- a notification adapter, currently GitHub Issues.
+
+This split keeps the scheduler, job discovery, executors, and dashboard data
+generation reusable for a future self-hosted Docker/SQLite mode.
+
+## The `cron-state` branch
+
+GitHub Actions runners are ephemeral, so dispatcher state must be persisted
+somewhere. Generated state lives on a separate **`cron-state`** branch:
+
+```text
+state/*.json
+history/*.json
+docs/dashboard-data/summary.json
+docs/index.html
+docs/app.js
+docs/styles.css
 ```
 
-The core depends on two small interfaces (`engine/state_backend.py`'s
-`StateBackend`, `engine/notify.py`'s `Notifier`) instead of talking to git or
-GitHub Issues directly. `adapters/github/` supplies the concrete
-implementations for this edition. This split exists so a different backend —
-e.g. SQLite for a self-hosted deployment — can be swapped in later without
-touching `engine/`.
+The dispatcher never commits operational state to `main`.
 
-### The `cron-state` branch
+GitHub Pages should serve from:
 
-Every dispatcher run needs to persist state somewhere (GitHub Actions runners
-are ephemeral). Rather than committing that to `main` — which would bury real
-commits under thousands of automated ones — all generated state
-(`state/*.json`, `history/*.json`, `docs/dashboard-data/summary.json`) lives
-on a separate **`cron-state`** branch that the workflow creates automatically
-on first run. `main` is never touched by the dispatcher.
+```text
+Branch: cron-state
+Folder: /docs
+```
 
-GitHub Pages should be configured to serve from `cron-state:/docs` (see
-Setup below) — the dashboard's static shell (`adapters/github/site/`) is
-copied there by every run alongside the generated data, so Pages only needs
-to watch one branch.
+## Two-phase commit
 
-### Two-phase commit
+Each run commits twice:
 
-Each run commits twice: once right after deciding what's due and claiming it
-(before anything executes), and once after execution finishes. If the runner
-is killed between those two commits, the next run finds the claim already
-made and treats it as an abandoned attempt rather than silently re-firing a
-job that may have already run — see `engine/ledger.py`'s
-`reconcile_stale_claims`.
+1. Claim due occurrences before executing any job.
+2. Finalize dedup state, cursors, history, heartbeat, issues, and dashboard data
+   after execution finishes.
 
-### Catch-up, not "exactly every 5 minutes"
+If a runner dies after the claim commit, the next run reconciles stale claims
+instead of silently firing an occurrence twice.
 
-GitHub's `schedule` trigger is best-effort and can lag under load. Each job
-tracks a "last evaluated" cursor; every run computes every cron occurrence
-that became due since that cursor, not just "is it due right now" — so a
-delayed or occasionally-skipped tick doesn't silently drop a run. See
-`misfire_policy` below for what happens when several occurrences pile up at
-once.
+## Catch-up, not exact timing
 
-### Heartbeat
-
-The dashboard shows when the dispatcher itself last ran (separate from any
-individual job's status) — that's `state/heartbeat.json`, updated
-unconditionally on every tick. If that timestamp goes stale, the dispatcher
-itself has stopped running (check the Actions tab).
+GitHub's scheduled workflow trigger is best-effort and can start late. The
+dispatcher tracks a per-job cursor and computes every cron occurrence that
+became due since the last evaluated time. This is why delayed ticks do not
+silently drop jobs.
 
 ## Setup
 
-1. **Create the repo as public** on GitHub and push this code to `main`.
-2. **Enable GitHub Pages**: Settings → Pages → Source: "Deploy from a
-   branch" → Branch: `cron-state` / `/docs`. The `cron-state` branch is
-   created automatically the first time the dispatcher workflow runs, so
-   trigger it once manually first (Actions tab → "Dispatch cron jobs" →
-   "Run workflow") before configuring Pages.
-3. That's it — no extra secrets needed for the two example jobs.
-   `GITHUB_TOKEN` is provided automatically by Actions with `contents: write`
-   + `issues: write` (already set in the workflow's `permissions:` block).
+1. Create the repo as public on GitHub and push `main`.
+2. Trigger **Dispatch cron jobs** manually once so the workflow creates
+   `cron-state`.
+3. Enable Pages from `cron-state` / `/docs`.
+
+The example jobs do not need extra secrets. `GITHUB_TOKEN` is provided
+automatically by Actions with the workflow permissions already configured.
 
 ## Adding a job
 
-Create a file under `jobs/` ending in `.job.yml`, anywhere in the tree —
-nested folders are fine and are just for your own organization.
+Create a file under `jobs/` ending in `.job.yml`.
 
 ```yaml
-id: my-unique-job-id       # required, globally unique, stable across moves
+id: my-unique-job-id
 name: "Human-readable name"
-schedule: "*/10 * * * *"    # standard 5-field cron
-type: http                  # or: script
+schedule: "*/10 * * * *"
+type: http
 http:
   url: "https://example.com/ping"
   expected_status: [200]
 ```
 
-Push it (or open a PR — `.github/workflows/validate.yml` checks schema,
-duplicate IDs, and script-path safety on every push/PR touching `jobs/**`,
-before anything ever runs).
+Nested folders are supported and are only for organization.
 
-### Defaults inheritance
+## Defaults inheritance
 
-Drop a `_defaults.yml` in any folder under `jobs/` to set defaults for every
-job in that folder and its subfolders. Deeper `_defaults.yml` files override
-shallower ones; a job's own fields always win. Allowed default keys:
-`timezone`, `enabled`, `retries`, `retry_backoff_seconds`, `timeout_seconds`,
-`misfire_policy`, `misfire_cap`, `history_limit`, `notify`. (Not `id`,
-`schedule`, `type`, `http`, `script` — those must always be set per-job.)
+Add `_defaults.yml` in any folder under `jobs/` to set defaults for that folder
+and its subfolders. Deeper defaults override shallower defaults, and a job's own
+fields override all defaults.
 
-### Referencing a secret in an HTTP job
+Allowed default keys:
 
-Header values of the exact form `${VAR_NAME}` are substituted from the
+```text
+timezone
+enabled
+retries
+retry_backoff_seconds
+timeout_seconds
+misfire_policy
+misfire_cap
+history_limit
+history_retention_days
+failure_policy
+notify
+```
+
+Identity and job-specific execution fields such as `id`, `schedule`, `type`,
+`http`, and `script` must be set per job.
+
+## Referencing a secret in an HTTP job
+
+Header values of the exact form `${VAR_NAME}` are substituted from the process
 environment at execution time:
 
 ```yaml
@@ -131,61 +145,122 @@ http:
 ```
 
 Add `MY_WEBHOOK_TOKEN` as a repo secret and pass it through in
-`.github/workflows/dispatcher.yml`'s `env:` block for the "Run dispatcher"
-step. The value is never logged or stored in history.
+`.github/workflows/dispatcher.yml` for the "Run dispatcher" step. The value is
+never logged or stored in history.
 
-### `misfire_policy`
+## Misfire policy
 
-If the dispatcher is delayed and a job's schedule fired multiple times
-since it was last checked:
+If the dispatcher is delayed and a job's schedule fired multiple times since it
+was last checked:
 
-- `most_recent` (default): only the latest missed occurrence runs; the rest
-  are recorded as `skipped` in history (visible, not silently dropped).
-- `all`: every missed occurrence runs, capped by `misfire_cap` (default 10)
-  as a safety valve against a huge backlog.
+- `most_recent` runs only the latest missed occurrence and records older ones as
+  `skipped`.
+- `all` runs every missed occurrence, capped by `misfire_cap`.
 
-### Running a job manually
+## Manual runs
 
-Actions tab → "Dispatch cron jobs" → "Run workflow" → fill in `job_id`. This
-bypasses the schedule entirely (runs immediately) but **not** the `enabled`
-flag — running a disabled job also requires checking `force_disabled`.
+Actions tab -> **Dispatch cron jobs** -> **Run workflow** -> enter `job_id`.
 
-### Script jobs
+Manual runs bypass the schedule but not the `enabled` flag. Running a disabled
+or auto-disabled job requires `force_disabled`.
 
-`script.path` must point to a file under `scripts/` (repo-relative, e.g.
-`scripts/examples/backup_check.sh`) — no inline commands, no path traversal,
-no symlinks out of `scripts/`, and only `bash`/`python3`/`node` may run it.
-These checks run both at validate-time (PR-time) and execute-time.
+## Failure backoff and auto-disable
 
-## What's redacted, and why
+Each job has a failure policy. Defaults are intentionally conservative:
 
-Public history and the dashboard never contain:
+```yaml
+failure_policy:
+  auto_disable_after_consecutive_failures: 5
+  initial_backoff_seconds: 300
+  backoff_multiplier: 2
+  max_backoff_seconds: 21600
+```
 
-- HTTP response bodies or headers (only status code + pass/fail + timing)
-- Script stdout/stderr (only exit code + timing) — a script could easily
-  echo a secret from its environment by accident, so this is a deliberate v1
-  simplification rather than an oversight
-- Request headers, credentials, or Authorization values
+When a job fails, future automatic runs pause with exponential backoff. After
+the configured consecutive-failure threshold, the job is auto-disabled so the
+runner stops calling an endpoint that may be broken, rate-limited, or rejecting
+requests.
 
-Every stored "detail" string is hard-capped at 300 characters regardless.
+Manual runs can still be used to test recovery. If a job is auto-disabled, use
+`force_disabled` explicitly. A successful run clears the failure pause and
+auto-disable state.
+
+The dashboard shows `paused` and `disabled` states separately.
+
+## Script jobs
+
+`script.path` must point to a repo-relative file under `scripts/`, for example:
+
+```yaml
+type: script
+script:
+  path: scripts/examples/backup_check.sh
+  interpreter: bash
+  args: ["--verbose"]
+```
+
+Security rules:
+
+- no inline shell commands;
+- no absolute paths;
+- no `..` traversal;
+- no symlink escape;
+- only `bash`, `python3`, and `node` interpreters are allowed;
+- stdout/stderr are not stored in history.
+
+## Redaction
+
+Public history and dashboard data never contain:
+
+- HTTP response bodies or headers;
+- script stdout/stderr;
+- request headers;
+- credentials or Authorization values.
+
+Stored detail strings are capped at 300 characters.
+
+## History storage and cleanup
+
+The dashboard reads a small recent-history file per job so the UI stays fast.
+The dispatcher also writes month-based archive files under:
+
+```text
+history/archive/YYYY-MM/<job-id>.json
+```
+
+Those archive files live on the `cron-state` branch with the rest of the
+generated state. `history_retention_days` controls cleanup of old archive
+entries; the default is 365 days. Git itself still preserves prior committed
+state in repository history until you intentionally rewrite or prune it.
 
 ## Local development
 
 ```bash
-python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements-dev.txt
-python -m engine.validate_cli     # validate jobs/ without executing anything
-python -m pytest tests/ -q        # scheduler, discovery, ledger, script/HTTP security
+npm install
+npm run validate
+npm test
 ```
 
-## Self-hosted mode (designed-for, not built)
+To run the GitHub adapter locally, point `STATE_DIR` at a temporary checkout or
+scratch directory. Do not point it at `main`:
 
-`engine/` has no GitHub-specific imports by design, so a future Docker
-Compose deployment — its own internal scheduler, mounted private `jobs/` and
-`scripts/` directories, `.env`/Docker secrets, SQLite persistence, an
-authenticated dashboard, no dependency on GitHub Actions/Pages/Issues — can
-reuse the same job schema, `engine/scheduler.py`, `engine/executors/`,
-`engine/dispatch.py`, and `engine/history.py` unchanged. It would supply its
-own `StateBackend` (e.g. SQLite instead of `JsonFileStateBackend`) and
-`Notifier` (e.g. a webhook instead of `GitHubIssuesNotifier`). That mode
-isn't implemented yet — only the seam for it is.
+```bash
+STATE_DIR=.local-state \
+GITHUB_TOKEN=dummy \
+GITHUB_REPOSITORY=owner/repo \
+npm run dispatch:github
+```
+
+The real GitHub workflow prepares a `cron-state` worktree before running the
+dispatcher.
+
+## Self-hosted mode
+
+Self-hosted mode is designed for but not built yet. The Node core under
+`src/engine/` is GitHub-independent, so a future Docker Compose deployment can
+reuse the same job schema, scheduler, discovery, validation, executors, retry
+logic, and dashboard data model.
+
+That future mode should supply its own state backend, likely SQLite, and its
+own notifier/web UI instead of depending on GitHub Actions, GitHub Pages, or
+GitHub Issues at runtime.

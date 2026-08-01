@@ -24,6 +24,17 @@
     "misfire_policy": { "type": "string", "enum": ["most_recent", "all"] },
     "misfire_cap": { "type": "integer", "minimum": 1, "maximum": 500 },
     "history_limit": { "type": "integer", "minimum": 1, "maximum": 1000 },
+    "history_retention_days": { "type": "integer", "minimum": 1, "maximum": 3650 },
+    "failure_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "auto_disable_after_consecutive_failures": { "type": "integer", "minimum": 1, "maximum": 100 },
+        "initial_backoff_seconds": { "type": "integer", "minimum": 0, "maximum": 86400 },
+        "backoff_multiplier": { "type": "number", "minimum": 1, "maximum": 10 },
+        "max_backoff_seconds": { "type": "integer", "minimum": 0, "maximum": 604800 }
+      }
+    },
     "notify": {
       "type": "object",
       "additionalProperties": false,
