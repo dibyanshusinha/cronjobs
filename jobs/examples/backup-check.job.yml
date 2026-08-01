@@ -1,0 +1,12 @@
+id: example-backup-check
+name: "Example: backup check script"
+description: "Demonstrates a script job. Safe to delete once you add your own jobs."
+schedule: "0 3 * * *"
+timezone: "UTC"
+type: script
+retries: 1
+script:
+  path: scripts/examples/backup_check.sh
+  args: ["--verbose"]
+  interpreter: bash
+  timeout_seconds: 60

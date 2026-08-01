@@ -1,0 +1,10 @@
+id: example-http-ping
+name: "Example: ping httpbin"
+description: "Demonstrates an http job. Safe to delete once you add your own jobs."
+schedule: "*/15 * * * *"
+type: http
+http:
+  method: GET
+  url: "https://httpbin.org/status/200"
+  expected_status: [200]
+  timeout_seconds: 10

@@ -1,0 +1,2 @@
+# Folder-level override: examples run in IST regardless of the repo-wide default.
+timezone: "Asia/Kolkata"

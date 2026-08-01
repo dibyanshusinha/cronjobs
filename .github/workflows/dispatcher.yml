@@ -1,0 +1,75 @@
+name: Dispatch cron jobs
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+    inputs:
+      job_id:
+        description: "Run one job now, bypassing its schedule"
+        required: false
+        type: string
+      force_disabled:
+        description: "Allow running a disabled job (only used with job_id)"
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  issues: write
+
+# Overlapping scheduled runs queue instead of racing each other's commits to
+# the cron-state branch.
+concurrency:
+  group: cron-dispatcher
+  cancel-in-progress: false
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Prepare cron-state worktree
+        run: |
+          set -euo pipefail
+          git config user.name "cron-dispatcher[bot]"
+          git config user.email "cron-dispatcher[bot]@users.noreply.github.com"
+
+          if git ls-remote --exit-code --heads origin cron-state > /dev/null 2>&1; then
+            git fetch origin cron-state
+            git worktree add cron-state-checkout origin/cron-state
+            (cd cron-state-checkout && git checkout -B cron-state)
+          else
+            echo "cron-state branch doesn't exist yet — bootstrapping it as an orphan branch."
+            git worktree add --detach cron-state-checkout
+            cd cron-state-checkout
+            git checkout --orphan cron-state
+            git rm -rf . > /dev/null 2>&1 || true
+            mkdir -p state history docs/dashboard-data
+            touch docs/.nojekyll
+            git add -A
+            git commit -m "chore: bootstrap cron-state branch"
+            git push origin cron-state
+          fi
+
+      - name: Run dispatcher
+        env:
+          STATE_DIR: ${{ github.workspace }}/cron-state-checkout
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          JOB_ID: ${{ github.event.inputs.job_id }}
+          FORCE_DISABLED: ${{ github.event.inputs.force_disabled }}
+          MAX_CONCURRENCY: "5"
+        run: python -m adapters.github.run_dispatcher

@@ -1,0 +1,18 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+*.egg-info/
+.DS_Store
+
+# Never committed: this edition's secrets live in GitHub Secrets, not files.
+# Kept here defensively for local testing and for the future self-hosted mode.
+.env
+.env.*
+*.pem
+*.key
+
+# Local scratch state if you point STATE_DIR at the repo during manual testing.
+cron-state-checkout/
+.local-state/

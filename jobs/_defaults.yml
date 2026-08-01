@@ -1,0 +1,11 @@
+# Inherited by every job under jobs/, unless overridden by a deeper _defaults.yml
+# or by the job file itself. See README.md for the full precedence rules.
+timezone: "UTC"
+retries: 2
+retry_backoff_seconds: 30
+timeout_seconds: 30
+misfire_policy: most_recent
+misfire_cap: 10
+notify:
+  on_failure: true
+  on_recovery: true
