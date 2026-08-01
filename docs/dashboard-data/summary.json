@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-08-01T22:54:27.916471Z",
+  "generated_at": "2026-08-01T23:16:00.820682Z",
   "heartbeat": {
-    "detail": "1 executed, 0 skipped",
-    "last_run_utc": "2026-08-01T22:54:27.916471Z",
+    "detail": "1 executed, 2 skipped",
+    "last_run_utc": "2026-08-01T23:16:00.820682Z",
     "status": "ok"
   },
   "jobs": [
@@ -48,11 +48,11 @@
       "consecutive_failures": 0,
       "enabled": true,
       "id": "example-http-ping",
-      "last_evaluated_utc": "2026-08-01T22:31:36.704949Z",
+      "last_evaluated_utc": "2026-08-01T23:16:01.554957Z",
       "last_status": "success",
-      "last_trigger": null,
+      "last_trigger": "scheduled",
       "name": "Example: ping httpbin",
-      "next_due_utc": "2026-08-01T23:00:00Z",
+      "next_due_utc": "2026-08-01T23:30:00Z",
       "open_issue": null,
       "recent_history": [
         {
@@ -64,6 +64,42 @@
           "scheduled_time": "2026-08-01T22:30:00Z",
           "started_at": "2026-08-01T22:31:36.657488Z",
           "status": "success"
+        },
+        {
+          "attempts": 0,
+          "detail": "skipped by misfire policy (a more recent occurrence ran instead)",
+          "duration_ms": null,
+          "finished_at": null,
+          "job_id": "example-http-ping",
+          "run_url": null,
+          "scheduled_time": "2026-08-01T22:45:00Z",
+          "started_at": null,
+          "status": "skipped",
+          "trigger": "scheduled"
+        },
+        {
+          "attempts": 0,
+          "detail": "skipped by misfire policy (a more recent occurrence ran instead)",
+          "duration_ms": null,
+          "finished_at": null,
+          "job_id": "example-http-ping",
+          "run_url": null,
+          "scheduled_time": "2026-08-01T23:00:00Z",
+          "started_at": null,
+          "status": "skipped",
+          "trigger": "scheduled"
+        },
+        {
+          "attempts": 1,
+          "detail": "HTTP 200",
+          "duration_ms": 21,
+          "finished_at": "2026-08-01T23:16:01.554957Z",
+          "job_id": "example-http-ping",
+          "run_url": "https://github.com/dibyanshusinha/cronjobs/actions/runs/30722974090",
+          "scheduled_time": "2026-08-01T23:15:00Z",
+          "started_at": "2026-08-01T23:16:01.533794Z",
+          "status": "success",
+          "trigger": "scheduled"
         }
       ],
       "schedule": "*/15 * * * *",
