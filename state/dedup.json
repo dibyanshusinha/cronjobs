@@ -7,8 +7,8 @@
     },
     "example-backup-check|2026-08-01T22:54:27.916471Z": {
       "claimed_at": "2026-08-01T22:54:27.916471Z",
-      "finished_at": null,
-      "status": "running"
+      "finished_at": "2026-08-01T22:54:27.916471Z",
+      "status": "success"
     },
     "example-http-ping|2026-08-01T22:30:00Z": {
       "claimed_at": "2026-08-01T22:31:35.918236Z",

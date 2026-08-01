@@ -100,8 +100,75 @@ th { color: var(--muted); font-weight: 600; }
 .job-name { font-weight: 600; }
 .job-id { color: var(--muted); font-size: 0.8rem; display: block; }
 
+.muted { color: var(--muted); }
+
+.tzline { display: inline-block; }
+.tzline-local { color: var(--muted); }
+.iso-utc {
+  display: inline-block;
+  color: var(--muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.75rem;
+}
+
+.trigger-tag {
+  display: inline-block;
+  padding: 0.05em 0.5em;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  border: 1px solid var(--border);
+  color: var(--muted);
+}
+.trigger-tag.manual { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 50%, var(--border)); }
+.trigger-tag.scheduled { color: var(--muted); }
+
+.col-expand { width: 2rem; }
+
+.expand-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 0.9rem;
+  padding: 0.2rem 0.4rem;
+  line-height: 1;
+}
+.expand-btn:hover { color: var(--fg); }
+
+.job-row { cursor: pointer; }
+.job-row:hover { background: var(--card); }
+
+.history-row td {
+  background: var(--card);
+  padding: 0.75rem 1rem;
+}
+
+.history-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.history-table thead, .history-table tbody { display: table; width: 100%; table-layout: fixed; }
+.history-table th, .history-table td {
+  font-size: 0.82rem;
+  padding: 0.4rem 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+.history-table tbody tr:last-child td { border-bottom: none; }
+
+.run-detail {
+  color: var(--muted);
+  font-size: 0.78rem;
+  margin-top: 0.2rem;
+  overflow-wrap: anywhere;
+}
+
 footer {
   margin-top: 2rem;
   color: var(--muted);
   font-size: 0.8rem;
 }
+
+.tz-note { max-width: 60ch; }

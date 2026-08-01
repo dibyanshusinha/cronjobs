@@ -9,6 +9,18 @@
       "scheduled_time": "2026-08-01T22:33:55.930292Z",
       "started_at": "2026-08-01T22:33:56.701660Z",
       "status": "success"
+    },
+    {
+      "attempts": 1,
+      "detail": "exit code 0",
+      "duration_ms": 2,
+      "finished_at": "2026-08-01T22:54:28.860405Z",
+      "job_id": "example-backup-check",
+      "run_url": "https://github.com/dibyanshusinha/cronjobs/actions/runs/30722255086",
+      "scheduled_time": "2026-08-01T22:54:27.916471Z",
+      "started_at": "2026-08-01T22:54:28.858063Z",
+      "status": "success",
+      "trigger": "manual"
     }
   ]
 }
