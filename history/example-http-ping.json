@@ -9,6 +9,30 @@
       "scheduled_time": "2026-08-01T22:30:00Z",
       "started_at": "2026-08-01T22:31:36.657488Z",
       "status": "success"
+    },
+    {
+      "attempts": 0,
+      "detail": "skipped by misfire policy (a more recent occurrence ran instead)",
+      "duration_ms": null,
+      "finished_at": null,
+      "job_id": "example-http-ping",
+      "run_url": null,
+      "scheduled_time": "2026-08-01T22:45:00Z",
+      "started_at": null,
+      "status": "skipped",
+      "trigger": "scheduled"
+    },
+    {
+      "attempts": 0,
+      "detail": "skipped by misfire policy (a more recent occurrence ran instead)",
+      "duration_ms": null,
+      "finished_at": null,
+      "job_id": "example-http-ping",
+      "run_url": null,
+      "scheduled_time": "2026-08-01T23:00:00Z",
+      "started_at": null,
+      "status": "skipped",
+      "trigger": "scheduled"
     }
   ]
 }
