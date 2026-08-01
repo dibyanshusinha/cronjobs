@@ -34,6 +34,7 @@ def build_summary(jobs: list[Job], ledger: Ledger, history: HistoryStore, now: d
         last_real = next((r for r in reversed(recent) if r.get("status") != "skipped"), None)
         last_run_at = last_real["finished_at"] if last_real else cursor.get("last_evaluated_utc")
         last_status = last_real["status"] if last_real else cursor.get("last_status")
+        last_trigger = last_real.get("trigger") if last_real else None
 
         job_entries.append(
             {
@@ -45,6 +46,7 @@ def build_summary(jobs: list[Job], ledger: Ledger, history: HistoryStore, now: d
                 "timezone": job.timezone,
                 "last_evaluated_utc": last_run_at,
                 "last_status": last_status,
+                "last_trigger": last_trigger,
                 "consecutive_failures": consecutive_failures,
                 "next_due_utc": next_due,
                 "open_issue": ledger.open_issue_number(job.id),

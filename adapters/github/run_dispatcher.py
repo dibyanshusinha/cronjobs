@@ -20,6 +20,7 @@ import shutil
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Optional
 
 from engine import dashboard, discovery, dispatch, schema
 from engine.history import HistoryStore
@@ -38,6 +39,18 @@ def _env_bool(name: str, default: bool = False) -> bool:
     if val is None or val == "":
         return default
     return val.strip().lower() in ("1", "true", "yes")
+
+
+def _current_run_url() -> Optional[str]:
+    """Link back to the Actions run these results came from, for the dashboard.
+    All three env vars are set automatically by GitHub Actions; only absent
+    when running the dispatcher outside of Actions (e.g. local testing)."""
+    server = os.environ.get("GITHUB_SERVER_URL")
+    repo = os.environ.get("GITHUB_REPOSITORY")
+    run_id = os.environ.get("GITHUB_RUN_ID")
+    if server and repo and run_id:
+        return f"{server}/{repo}/actions/runs/{run_id}"
+    return None
 
 
 def sync_site_shell(state_dir: Path) -> None:
@@ -90,7 +103,10 @@ def main() -> int:
         ["."], f"chore: claim {len(planned.to_run)} occurrence(s) @ {now.isoformat()}"
     )
 
-    summary = dispatch.execute(planned, ledger, history, notifier, REPO_ROOT, max_concurrency=max_concurrency)
+    summary = dispatch.execute(
+        planned, ledger, history, notifier, REPO_ROOT,
+        max_concurrency=max_concurrency, run_url=_current_run_url(),
+    )
 
     # Regenerate dashboard data + sync the (rarely-changing) static shell.
     summary_data = dashboard.build_summary(jobs, ledger, history, now)

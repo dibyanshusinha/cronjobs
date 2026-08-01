@@ -70,3 +70,5 @@ class RunResult:
     duration_ms: Optional[int] = None
     attempts: int = 0
     detail: str = ""
+    trigger: str = "scheduled"  # "scheduled" | "manual" — set by dispatch.execute()
+    run_url: Optional[str] = None  # GitHub Actions run link, set by the GitHub adapter

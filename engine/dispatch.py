@@ -114,14 +114,22 @@ def execute(
     notifier: Notifier,
     repo_root: Path,
     max_concurrency: int = 5,
+    run_url: Optional[str] = None,
 ) -> DispatchSummary:
-    """Run everything plan() claimed, record results, notify, advance cursors."""
+    """Run everything plan() claimed, record results, notify, advance cursors.
+
+    `run_url` (if given) is attributed to every result from this tick — it's
+    display metadata for the dashboard, not something that affects dedup,
+    scheduling, or retries.
+    """
     results = run_bounded(
         [(lambda j=job, o=occ: run_with_retry(j, o, repo_root)) for job, occ, _m in planned.to_run],
         max_workers=max_concurrency,
     )
 
     for (job, occ, manual), result in zip(planned.to_run, results):
+        result.trigger = "manual" if manual else "scheduled"
+        result.run_url = run_url
         ledger.finalize(job.id, occ, result.status, planned.now)
         history.append(job.id, result, job.history_limit)
 

@@ -47,6 +47,8 @@ class HistoryStore:
                 "duration_ms": None,
                 "attempts": 0,
                 "detail": reason[:MAX_DETAIL_CHARS],
+                "trigger": "scheduled",
+                "run_url": None,
             }
         )
         # Skipped entries don't have a job's history_limit handy here; callers
