@@ -153,11 +153,39 @@ main {
   margin: 0 auto;
 }
 
+.overview-row {
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr);
+  gap: 12px;
+  align-items: stretch;
+  margin-bottom: 16px;
+}
+
+.add-job-button {
+  display: grid;
+  place-items: center;
+  min-height: 84px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--accent);
+  color: var(--accent-contrast);
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 1;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.add-job-button:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-strong);
+}
+
 .summary-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 12px;
-  margin-bottom: 16px;
 }
 
 .metric {
@@ -820,7 +848,7 @@ footer {
   .topbar { display: block; }
   .top-actions {
     display: grid;
-    grid-template-columns: max-content max-content 1fr;
+    grid-template-columns: 1fr;
     width: 100%;
     margin-top: 12px;
     align-items: center;
@@ -837,6 +865,13 @@ footer {
     min-width: 0;
     max-width: none;
     margin-top: 2px;
+  }
+  .overview-row {
+    grid-template-columns: 46px minmax(0, 1fr);
+  }
+  .add-job-button {
+    min-height: 72px;
+    font-size: 28px;
   }
   .summary-grid { grid-template-columns: repeat(2, minmax(140px, 1fr)); }
   .builder-grid { grid-template-columns: 1fr; }

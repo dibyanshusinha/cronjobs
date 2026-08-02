@@ -1,7 +1,14 @@
 "use strict";
 
+const path = require("path");
 const scheduler = require("./scheduler");
 const { iso } = require("./timeutil");
+
+function displayPath(filePath) {
+  if (!filePath) return null;
+  const relative = path.relative(process.cwd(), filePath);
+  return relative && !relative.startsWith("..") ? relative : filePath;
+}
 
 function buildSummary(jobs, ledger, history, now) {
   let failing = 0;
@@ -48,7 +55,7 @@ function buildSummary(jobs, ledger, history, now) {
         id: job.id,
         name: job.name,
         type: job.type,
-        file_path: job.file_path,
+        file_path: displayPath(job.file_path),
         enabled: job.enabled,
         auto_disabled: Boolean(cursor.auto_disabled),
         auto_disabled_reason: cursor.auto_disabled_reason || null,

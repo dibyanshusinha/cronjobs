@@ -13,14 +13,16 @@
       <p id="generated" class="subtle">Loading dashboard data...</p>
     </div>
     <div class="top-actions">
-      <button id="open-builder" class="primary-action" type="button">Create job</button>
       <button id="theme-toggle" class="icon-button" type="button" title="Switch theme" aria-label="Switch theme">☾</button>
       <div id="heartbeat" class="heartbeat unknown">No heartbeat yet</div>
     </div>
   </header>
 
   <main>
-    <section id="summary" class="summary-grid" aria-label="Summary"></section>
+    <div class="overview-row">
+      <button id="open-builder" class="add-job-button" type="button" title="Create job" aria-label="Create job">+</button>
+      <section id="summary" class="summary-grid" aria-label="Summary"></section>
+    </div>
     <section id="jobs" class="jobs-grid" aria-label="Jobs">
       <div class="empty-state">Loading jobs...</div>
     </section>
