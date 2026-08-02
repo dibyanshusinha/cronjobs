@@ -23,9 +23,13 @@
       <button id="open-builder" class="add-job-button" type="button" title="Create job" aria-label="Create job">+</button>
       <section id="summary" class="summary-grid" aria-label="Summary"></section>
     </div>
+    <section id="statistics" class="charts-grid" aria-label="Statistics">
+      <div class="empty-state">Loading statistics...</div>
+    </section>
     <section id="jobs" class="jobs-grid" aria-label="Jobs">
       <div class="empty-state">Loading jobs...</div>
     </section>
+    <section id="job-detail" class="job-detail-section" aria-label="Selected job details" hidden></section>
   </main>
 
   <dialog id="job-modal" class="job-modal" aria-labelledby="builder-title">

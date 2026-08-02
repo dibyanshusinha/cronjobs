@@ -2,6 +2,10 @@ const DATA_URL = "dashboard-data/summary.json";
 const HEARTBEAT_STALE_AFTER_MINUTES = 15;
 const THEME_KEY = "cronjobs-theme";
 const HISTORY_PAGE_SIZE = 5;
+const JOBS_PAGE_SIZE = 8;
+let dashboardData = null;
+let jobsPage = 0;
+let selectedJobId = null;
 const WEEKDAYS = [
   ["0", "Sun"],
   ["1", "Mon"],
@@ -508,6 +512,203 @@ function renderSummary(data) {
     .join("");
 }
 
+function recentRuns(data) {
+  return (data.jobs || []).flatMap((job) =>
+    (job.recent_history || []).map((run) => ({
+      ...run,
+      job_id: job.id,
+      job_name: job.name || job.id,
+      timezone: job.timezone,
+    }))
+  );
+}
+
+function runTimestamp(run) {
+  const stamp = run.finished_at || run.scheduled_time;
+  if (!stamp) return null;
+  const date = new Date(stamp);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function renderActivityBars(runs) {
+  const now = new Date();
+  const buckets = Array.from({ length: 24 }, (_, index) => {
+    const start = new Date(now.getTime() - (23 - index) * 60 * 60 * 1000);
+    start.setMinutes(0, 0, 0);
+    return { label: start.getHours().toString().padStart(2, "0"), success: 0, failed: 0, other: 0 };
+  });
+  const oldest = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  for (const run of runs) {
+    const stamp = runTimestamp(run);
+    if (!stamp || stamp < oldest || run.status === "skipped") continue;
+    const diffHours = Math.floor((now - stamp) / (60 * 60 * 1000));
+    const bucket = buckets[23 - diffHours];
+    if (!bucket) continue;
+    if (run.status === "success") bucket.success += 1;
+    else if (run.status === "failed") bucket.failed += 1;
+    else bucket.other += 1;
+  }
+  const max = Math.max(1, ...buckets.map((bucket) => bucket.success + bucket.failed + bucket.other));
+  return `
+    <div class="activity-bars">
+      ${buckets
+        .map((bucket) => {
+          const total = bucket.success + bucket.failed + bucket.other;
+          return `
+            <div class="activity-column" title="${bucket.label}:00 - ${total} run(s)">
+              <div class="activity-stack" style="height: ${Math.max(4, (total / max) * 100)}%">
+                <span class="bar-success" style="height: ${(bucket.success / Math.max(total, 1)) * 100}%"></span>
+                <span class="bar-failed" style="height: ${(bucket.failed / Math.max(total, 1)) * 100}%"></span>
+                <span class="bar-other" style="height: ${(bucket.other / Math.max(total, 1)) * 100}%"></span>
+              </div>
+              <span class="activity-label">${bucket.label}</span>
+            </div>
+          `;
+        })
+        .join("")}
+    </div>
+  `;
+}
+
+function renderStatusMix(runs) {
+  const counts = runs.reduce(
+    (acc, run) => {
+      acc[run.status || "unknown"] = (acc[run.status || "unknown"] || 0) + 1;
+      return acc;
+    },
+    { success: 0, failed: 0, skipped: 0, unknown: 0 }
+  );
+  const total = Math.max(1, Object.values(counts).reduce((sum, value) => sum + value, 0));
+  return `
+    <div class="status-mix">
+      ${["success", "failed", "skipped", "unknown"]
+        .filter((status) => counts[status])
+        .map((status) => `
+          <div class="status-row">
+            <span>${badge(status)}</span>
+            <div class="status-track"><span class="${status}" style="width: ${(counts[status] / total) * 100}%"></span></div>
+            <strong>${counts[status]}</strong>
+          </div>
+        `)
+        .join("")}
+    </div>
+  `;
+}
+
+function jobStats(job) {
+  const runs = (job.recent_history || []).filter((run) => run.status !== "skipped");
+  const success = runs.filter((run) => run.status === "success").length;
+  const failed = runs.filter((run) => run.status === "failed").length;
+  const durations = runs
+    .map((run) => run.duration_ms)
+    .filter((value) => Number.isFinite(value));
+  const avgDuration = durations.length
+    ? Math.round(durations.reduce((sum, value) => sum + value, 0) / durations.length)
+    : null;
+  const lastRun = runs
+    .slice()
+    .sort((a, b) => (runTimestamp(b)?.getTime() || 0) - (runTimestamp(a)?.getTime() || 0))[0];
+  return {
+    total: runs.length,
+    success,
+    failed,
+    successRate: runs.length ? Math.round((success / runs.length) * 100) : null,
+    avgDuration,
+    lastRun,
+  };
+}
+
+function renderJobStatsStrip(job) {
+  const stats = jobStats(job);
+  return `
+    <div class="job-stats-strip">
+      <div><span class="field-label">Runs</span><strong>${stats.total}</strong></div>
+      <div><span class="field-label">Success</span><strong>${stats.successRate === null ? "-" : `${stats.successRate}%`}</strong></div>
+      <div><span class="field-label">Failures</span><strong>${stats.failed}</strong></div>
+      <div><span class="field-label">Avg duration</span><strong>${escapeHtml(duration(stats.avgDuration))}</strong></div>
+    </div>
+  `;
+}
+
+function renderJobDurationChart(job) {
+  const runs = (job.recent_history || [])
+    .filter((run) => run.status !== "skipped")
+    .slice(-20);
+  if (!runs.length) return `<div class="empty-state compact">No completed runs to chart yet.</div>`;
+  const durations = runs.map((run) => Number.isFinite(run.duration_ms) ? run.duration_ms : 0);
+  const max = Math.max(1, ...durations);
+  return `
+    <div class="duration-chart">
+      ${runs
+        .map((run) => {
+          const height = Math.max(6, ((Number.isFinite(run.duration_ms) ? run.duration_ms : 0) / max) * 100);
+          return `
+            <span class="duration-bar ${escapeHtml(run.status || "unknown")}" style="height: ${height}%" title="${escapeHtml(run.status || "unknown")} - ${escapeHtml(duration(run.duration_ms))}"></span>
+          `;
+        })
+        .join("")}
+    </div>
+  `;
+}
+
+function renderJobSparks(jobs) {
+  if (!jobs.length) return `<div class="empty-state">No jobs found.</div>`;
+  return `
+    <div class="spark-list">
+      ${jobs
+        .map((job) => {
+          const runs = (job.recent_history || []).slice(-18);
+          return `
+            <div class="spark-row">
+              <div>
+                <strong>${escapeHtml(job.name || job.id)}</strong>
+                <span class="detail">${escapeHtml(job.id)}</span>
+              </div>
+              <div class="spark-dots" title="Recent published history">
+                ${
+                  runs.length
+                    ? runs
+                        .map((run) => `<span class="spark-dot ${escapeHtml(run.status || "unknown")}" title="${escapeHtml(run.status || "unknown")}"></span>`)
+                        .join("")
+                    : `<span class="time-secondary">No history</span>`
+                }
+              </div>
+            </div>
+          `;
+        })
+        .join("")}
+    </div>
+  `;
+}
+
+function renderStatistics(data) {
+  const el = document.getElementById("statistics");
+  const runs = recentRuns(data);
+  el.innerHTML = `
+    <article class="chart-card wide">
+      <div class="chart-head">
+        <h2>24h Activity</h2>
+        <span class="subtle">Executed runs only</span>
+      </div>
+      ${renderActivityBars(runs)}
+    </article>
+    <article class="chart-card">
+      <div class="chart-head">
+        <h2>Status Mix</h2>
+        <span class="subtle">Recent published history</span>
+      </div>
+      ${renderStatusMix(runs)}
+    </article>
+    <article class="chart-card">
+      <div class="chart-head">
+        <h2>Per-Job Trend</h2>
+        <span class="subtle">Newest on the right</span>
+      </div>
+      ${renderJobSparks(data.jobs || [])}
+    </article>
+  `;
+}
+
 async function copyJobToggleInstruction(job, nextEnabled) {
   const path = job.file_path || `jobs/**/${job.id}.job.yml`;
   const text = [
@@ -576,21 +777,136 @@ function setHistoryPage(root, index, page) {
   if (next) next.disabled = nextPage >= pageCount - 1;
 }
 
+function renderJobDetail(job, index) {
+  const el = document.getElementById("job-detail");
+  if (!job) {
+    el.innerHTML = "";
+    el.hidden = true;
+    selectedJobId = null;
+    return;
+  }
+  selectedJobId = job.id;
+  const status = effectiveStatus(job);
+  const pausedUntil = status === "paused" ? renderTime(job.failure_pause_until_utc, job.timezone) : "";
+  const disabledDetail = job.auto_disabled ? job.auto_disabled_reason || "Auto-disabled after failures" : "";
+  el.hidden = false;
+  el.innerHTML = `
+    <article class="job-detail-card">
+      <div class="job-detail-head">
+        <div>
+          <button type="button" class="link-button" id="back-to-jobs">← Back to all jobs</button>
+          <h2>${escapeHtml(job.name || job.id)}</h2>
+          <p class="subtle">${escapeHtml(job.id)}</p>
+        </div>
+        <div>${badge(status)}${disabledDetail ? `<span class="detail">${escapeHtml(disabledDetail)}</span>` : ""}${pausedUntil ? `<span class="detail">until ${pausedUntil}</span>` : ""}</div>
+      </div>
+      ${renderJobStatsStrip(job)}
+      <div class="job-detail-grid">
+        <section class="chart-card">
+          <div class="chart-head">
+            <h3>Duration Trend</h3>
+            <span class="subtle">Recent completed runs</span>
+          </div>
+          ${renderJobDurationChart(job)}
+        </section>
+        <section class="chart-card">
+          <div class="chart-head">
+            <h3>Run Mix</h3>
+            <span class="subtle">Recent published history</span>
+          </div>
+          ${renderStatusMix((job.recent_history || []).map((run) => ({ ...run, job_id: job.id })))}
+        </section>
+      </div>
+      <div class="detail-grid">
+        <div><span class="field-label">Schedule</span><span class="field-value"><code>${escapeHtml(job.schedule)}</code><span class="detail">${escapeHtml(job.timezone || "UTC")}</span></span></div>
+        <div><span class="field-label">Last run</span><span class="field-value">${renderTime(job.last_evaluated_utc, job.timezone)}${triggerLabel(job.last_trigger)}</span></div>
+        <div><span class="field-label">Next due</span><span class="field-value">${job.enabled && !job.auto_disabled ? renderTime(job.next_due_utc, job.timezone) : `<span class="time-secondary">Disabled</span>`}</span></div>
+        <div><span class="field-label">Failure policy</span><span class="field-value">disable after ${escapeHtml(job.failure_policy?.auto_disable_after_consecutive_failures ?? 5)} failures<span class="detail">max backoff ${escapeHtml(job.failure_policy?.max_backoff_seconds ?? 21600)}s</span></span></div>
+        <div><span class="field-label">History</span><span class="field-value">recent ${escapeHtml(job.recent_history?.length || 0)}<span class="detail">archives retained ${escapeHtml(job.history_retention_days || 365)} days</span></span></div>
+        <div><span class="field-label">Job file</span><span class="field-value"><code>${escapeHtml(job.file_path || "Unknown job path")}</code></span></div>
+      </div>
+      <div class="management-panel">
+        <div>
+          <span class="field-label">Management</span>
+          <span class="field-value">This dashboard is static. Copy the edit, update the YAML, validate, then push.</span>
+        </div>
+        <div class="management-actions">
+          <button type="button" class="secondary-action copy-toggle" data-job-index="${index}" data-next-enabled="${job.enabled ? "false" : "true"}">
+            Copy ${job.enabled ? "disable" : "enable"} edit
+          </button>
+          <span class="management-note" data-toggle-note="${index}"></span>
+        </div>
+      </div>
+      <h3 class="section-title">History</h3>
+      ${renderHistory(job, index)}
+    </article>
+  `;
+  document.getElementById("back-to-jobs").addEventListener("click", () => {
+    selectedJobId = null;
+    renderJobDetail(null);
+    renderJobs(dashboardData?.jobs || []);
+    document.getElementById("jobs").scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+  el.querySelectorAll(".history-prev, .history-next").forEach((button) => {
+    button.addEventListener("click", () => {
+      const targetIndex = button.dataset.historyTarget;
+      const current = Number.parseInt(el.querySelector(`[data-history-current="${targetIndex}"]`)?.textContent || "1", 10) - 1;
+      setHistoryPage(el, targetIndex, button.classList.contains("history-next") ? current + 1 : current - 1);
+    });
+  });
+  el.querySelectorAll(".copy-toggle").forEach((button) => {
+    button.addEventListener("click", async () => {
+      const targetIndex = Number.parseInt(button.dataset.jobIndex, 10);
+      const note = el.querySelector(`[data-toggle-note="${targetIndex}"]`);
+      const message = await copyJobToggleInstruction((dashboardData?.jobs || [])[targetIndex], button.dataset.nextEnabled === "true");
+      if (note) note.textContent = message;
+    });
+  });
+  setHistoryPage(el, String(index), 0);
+  el.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function setJobsPage(page) {
+  const jobs = dashboardData?.jobs || [];
+  const pageCount = Math.max(1, Math.ceil(jobs.length / JOBS_PAGE_SIZE));
+  jobsPage = Math.max(0, Math.min(page, pageCount - 1));
+  renderJobs(jobs);
+}
+
 function renderJobs(jobs) {
   const el = document.getElementById("jobs");
   if (!jobs.length) {
     el.innerHTML = `<div class="empty-state">No jobs found.</div>`;
+    renderJobDetail(null);
     return;
   }
-  el.innerHTML = jobs
+  const pageCount = Math.max(1, Math.ceil(jobs.length / JOBS_PAGE_SIZE));
+  jobsPage = Math.max(0, Math.min(jobsPage, pageCount - 1));
+  const pageJobs = jobs.slice(jobsPage * JOBS_PAGE_SIZE, (jobsPage + 1) * JOBS_PAGE_SIZE);
+  const start = jobsPage * JOBS_PAGE_SIZE + 1;
+  const end = Math.min(jobs.length, (jobsPage + 1) * JOBS_PAGE_SIZE);
+  el.innerHTML = `
+    <div class="section-head">
+      <div>
+        <h2>Jobs</h2>
+        <p class="subtle">Consolidated view. Select a job for detailed statistics and history.</p>
+      </div>
+      <div class="pager">
+        <button type="button" class="secondary-action" id="jobs-prev">Previous</button>
+        <span class="history-page-label">${start}-${end} of ${jobs.length}</span>
+        <button type="button" class="secondary-action" id="jobs-next">Next</button>
+      </div>
+    </div>
+    <div class="jobs-list">
+      ${pageJobs
     .map((job, index) => {
+      const actualIndex = jobsPage * JOBS_PAGE_SIZE + index;
       const status = effectiveStatus(job);
-      const detailsId = `job-details-${index}`;
       const pausedUntil = status === "paused" ? renderTime(job.failure_pause_until_utc, job.timezone) : "";
       const disabledDetail = job.auto_disabled ? job.auto_disabled_reason || "Auto-disabled after failures" : "";
       return `
-        <article class="job-card">
-          <div class="job-main">
+        <article class="job-card ${selectedJobId === job.id ? "selected" : ""}">
+          <button class="job-main job-select" type="button" data-job-index="${actualIndex}">
             <div>
               <h2 class="job-title">${escapeHtml(job.name || job.id)}</h2>
               <span class="job-id">${escapeHtml(job.id)}</span>
@@ -607,64 +923,39 @@ function renderJobs(jobs) {
               <span class="field-label">Next due</span>
               <span class="field-value">${job.enabled && !job.auto_disabled ? renderTime(job.next_due_utc, job.timezone) : `<span class="time-secondary">Disabled</span>`}</span>
             </div>
+            <div>
+              <span class="field-label">Recent</span>
+              ${renderJobStatsStrip(job)}
+            </div>
             <div class="actions">
-              <button class="toggle" type="button" aria-expanded="false" aria-controls="${detailsId}" title="Show recent history">+</button>
+              <span class="open-indicator">View</span>
             </div>
-          </div>
-          <div id="${detailsId}" class="details" hidden>
-            <div class="detail-grid">
-              <div><span class="field-label">Schedule</span><span class="field-value"><code>${escapeHtml(job.schedule)}</code><span class="detail">${escapeHtml(job.timezone || "UTC")}</span></span></div>
-              <div><span class="field-label">Failure policy</span><span class="field-value">disable after ${escapeHtml(job.failure_policy?.auto_disable_after_consecutive_failures ?? 5)} failures<span class="detail">max backoff ${escapeHtml(job.failure_policy?.max_backoff_seconds ?? 21600)}s</span></span></div>
-              <div><span class="field-label">History</span><span class="field-value">showing recent ${escapeHtml(job.recent_history?.length || 0)}<span class="detail">archives retained ${escapeHtml(job.history_retention_days || 365)} days</span></span></div>
-            </div>
-            <div class="management-panel">
-              <div>
-                <span class="field-label">Job file</span>
-                <code>${escapeHtml(job.file_path || "Unknown job path")}</code>
-              </div>
-              <div class="management-actions">
-                <button type="button" class="secondary-action copy-toggle" data-job-index="${index}" data-next-enabled="${job.enabled ? "false" : "true"}">
-                  Copy ${job.enabled ? "disable" : "enable"} edit
-                </button>
-                <span class="management-note" data-toggle-note="${index}">Static dashboard: edit the YAML and push.</span>
-              </div>
-            </div>
-            ${renderHistory(job, index)}
-          </div>
+          </button>
         </article>
       `;
     })
-    .join("");
+    .join("")}
+    </div>
+  `;
 
-  el.querySelectorAll(".toggle").forEach((button) => {
+  const prev = document.getElementById("jobs-prev");
+  const next = document.getElementById("jobs-next");
+  if (prev) {
+    prev.disabled = jobsPage === 0;
+    prev.addEventListener("click", () => setJobsPage(jobsPage - 1));
+  }
+  if (next) {
+    next.disabled = jobsPage >= pageCount - 1;
+    next.addEventListener("click", () => setJobsPage(jobsPage + 1));
+  }
+
+  el.querySelectorAll(".job-select").forEach((button) => {
     button.addEventListener("click", () => {
-      const target = document.getElementById(button.getAttribute("aria-controls"));
-      const expanded = button.getAttribute("aria-expanded") === "true";
-      button.setAttribute("aria-expanded", String(!expanded));
-      button.textContent = expanded ? "+" : "-";
-      target.hidden = expanded;
-      if (!expanded) setHistoryPage(el, button.getAttribute("aria-controls").replace("job-details-", ""), 0);
-    });
-  });
-
-  el.querySelectorAll(".history-prev, .history-next").forEach((button) => {
-    button.addEventListener("click", () => {
-      const index = button.dataset.historyTarget;
-      const current = Number.parseInt(el.querySelector(`[data-history-current="${index}"]`)?.textContent || "1", 10) - 1;
-      setHistoryPage(el, index, button.classList.contains("history-next") ? current + 1 : current - 1);
-    });
-  });
-
-  el.querySelectorAll(".copy-toggle").forEach((button) => {
-    button.addEventListener("click", async () => {
       const index = Number.parseInt(button.dataset.jobIndex, 10);
-      const note = el.querySelector(`[data-toggle-note="${index}"]`);
-      const message = await copyJobToggleInstruction(jobs[index], button.dataset.nextEnabled === "true");
-      if (note) note.textContent = message;
+      renderJobDetail(jobs[index], index);
+      renderJobs(jobs);
     });
   });
-
-  jobs.forEach((_, index) => setHistoryPage(el, String(index), 0));
 }
 
 async function main() {
@@ -675,8 +966,10 @@ async function main() {
     const response = await fetch(DATA_URL, { cache: "no-store" });
     if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
     const data = await response.json();
+    dashboardData = data;
     renderHeartbeat(data.heartbeat);
     renderSummary(data);
+    renderStatistics(data);
     renderJobs(data.jobs || []);
     document.getElementById("generated").innerHTML = `Generated ${renderTime(data.generated_at, viewerTimeZone())}`;
   } catch (err) {
