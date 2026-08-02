@@ -101,6 +101,16 @@ h1 {
   border-color: var(--muted);
 }
 
+#theme-toggle {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  z-index: 20;
+  border-radius: 999px;
+  background: var(--surface);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+}
+
 .heartbeat::before {
   content: "";
   display: inline-block;
@@ -326,6 +336,47 @@ legend {
 .headers-list {
   display: grid;
   gap: 8px;
+}
+
+.type-switcher {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.type-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--fg);
+  cursor: pointer;
+}
+
+.type-option:has(input:checked) {
+  border-color: var(--link);
+  background: color-mix(in srgb, var(--link), transparent 90%);
+}
+
+.type-option input {
+  width: auto;
+  margin: 2px 0 0;
+}
+
+.type-option strong,
+.type-option small {
+  display: block;
+}
+
+.type-option small {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
 }
 
 .day-pills {
@@ -665,23 +716,31 @@ footer {
   body { padding: 16px; }
   .topbar { display: block; }
   .top-actions {
+    display: grid;
+    grid-template-columns: max-content max-content 1fr;
     width: 100%;
     margin-top: 12px;
-    align-items: stretch;
-    flex-wrap: wrap;
+    align-items: center;
     justify-content: flex-start;
   }
+  .top-actions .primary-action,
+  .top-actions .icon-button:not(#theme-toggle) {
+    height: 38px;
+    align-self: center;
+  }
   .heartbeat {
-    flex: 1;
+    grid-column: 1 / -1;
+    justify-self: stretch;
     min-width: 0;
     max-width: none;
-    margin-top: 0;
+    margin-top: 2px;
   }
   .summary-grid { grid-template-columns: repeat(2, minmax(140px, 1fr)); }
   .builder-grid { grid-template-columns: 1fr; }
   .builder-form { border-right: 0; border-bottom: 1px solid var(--border); }
   .form-row.two,
   .form-row.three { grid-template-columns: 1fr; }
+  .type-switcher { grid-template-columns: 1fr; }
   .header-row { grid-template-columns: 1fr; }
   .header-row .remove-header { width: 100%; }
   .job-main { grid-template-columns: 1fr; }
