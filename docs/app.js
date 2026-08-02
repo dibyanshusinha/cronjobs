@@ -115,6 +115,30 @@ function formatCompactTime(isoStr, timeZone) {
   }
 }
 
+function formatSplitTime(isoStr, timeZone) {
+  if (!isoStr) return null;
+  const date = new Date(isoStr);
+  if (Number.isNaN(date.getTime())) return null;
+  try {
+    return {
+      time: new Intl.DateTimeFormat("en-US", {
+        timeZone,
+        hour: "2-digit",
+        minute: "2-digit",
+        timeZoneName: "short",
+      }).format(date),
+      date: new Intl.DateTimeFormat("en-US", {
+        timeZone,
+        month: "short",
+        day: "2-digit",
+        year: "numeric",
+      }).format(date),
+    };
+  } catch (e) {
+    return null;
+  }
+}
+
 function renderTime(isoStr, jobTz) {
   if (!isoStr) return `<span class="time-secondary">Never</span>`;
   const localTz = viewerTimeZone();
@@ -131,6 +155,18 @@ function renderCompactTime(isoStr, jobTz) {
   const primary = formatCompactTime(isoStr, jobTz || viewerTimeZone()) || isoStr;
   return `
     <span title="${escapeHtml(isoStr)}">${escapeHtml(primary)}</span>
+  `;
+}
+
+function renderSplitTime(isoStr, jobTz, fallback = "Never") {
+  if (!isoStr) return `<span class="time-secondary">${escapeHtml(fallback)}</span>`;
+  const parts = formatSplitTime(isoStr, jobTz || viewerTimeZone());
+  if (!parts) return `<span title="${escapeHtml(isoStr)}">${escapeHtml(isoStr)}</span>`;
+  return `
+    <span class="row-time" title="${escapeHtml(isoStr)}">
+      <span class="row-time-clock">${escapeHtml(parts.time)}</span>
+      <span class="row-time-date">${escapeHtml(parts.date)}</span>
+    </span>
   `;
 }
 
@@ -732,6 +768,37 @@ function renderJobTimeBlock(label, isoStr, timeZone, meta = "") {
   `;
 }
 
+function renderJobRowTimeBlock(label, isoStr, timeZone, fallback, meta = "") {
+  return `
+    <div class="job-time-block">
+      <span class="field-label">${escapeHtml(label)}</span>
+      <span class="field-value">${renderSplitTime(isoStr, timeZone, fallback)}${meta}</span>
+    </div>
+  `;
+}
+
+function renderJobStateBlock(state, resultStatus, pausedUntil, disabledDetail) {
+  return `
+    <div class="job-state-block">
+      <span class="field-label">State</span>
+      <div class="state-badges">
+        ${badge(state)}
+      </div>
+      <span class="detail">Result: ${escapeHtml(resultStatus)}</span>
+      ${disabledDetail ? `<span class="detail">${escapeHtml(disabledDetail)}</span>` : ""}
+      ${pausedUntil ? `<span class="detail">Paused until ${pausedUntil}</span>` : ""}
+    </div>
+  `;
+}
+
+function jobFolderLabel(job) {
+  const filePath = job.file_path || "";
+  if (!filePath.startsWith("jobs/")) return job.deleted ? "deleted" : "root";
+  const parts = filePath.split("/");
+  if (parts.length <= 2) return "root";
+  return parts.slice(1, -1).join(" / ") || "root";
+}
+
 function renderJobDurationChart(job) {
   const runs = (job.recent_history || [])
     .filter((run) => run.status !== "skipped")
@@ -1023,7 +1090,6 @@ function renderJobs(jobs) {
     <div class="section-head">
       <div>
         <h2>Jobs</h2>
-        <p class="subtle">Filter by name or ID. Click a row to open its accordion.</p>
       </div>
       <div class="jobs-toolbar">
         <label class="filter-field">
@@ -1042,7 +1108,9 @@ function renderJobs(jobs) {
     .map((job) => {
       const actualIndex = jobs.findIndex((candidate) => candidate.id === job.id);
       const status = effectiveStatus(job);
+      const resultStatus = job.last_status || "unknown";
       const state = schedulerState(job);
+      const folder = jobFolderLabel(job);
       const pausedUntil = status === "paused" ? renderTime(job.failure_pause_until_utc, job.timezone) : "";
       const disabledDetail = job.auto_disabled ? job.auto_disabled_reason || "Auto-disabled after failures" : "";
       const expanded = selectedJobId === job.id;
@@ -1053,21 +1121,15 @@ function renderJobs(jobs) {
             <div class="job-identity">
               <h2 class="job-title">${escapeHtml(job.name || job.id)}</h2>
               <div class="job-meta-line">
-                <span class="job-id">${escapeHtml(job.id)}</span>
                 <span class="job-type-chip">${escapeHtml(job.type || "job")}</span>
+                <span class="job-folder-chip">${escapeHtml(folder)}</span>
               </div>
+              <div class="job-id">ID ${escapeHtml(job.id)}</div>
             </div>
-            ${renderJobTimeBlock("Last run", job.last_evaluated_utc, job.timezone, triggerLabel(job.last_trigger))}
-            ${renderJobTimeBlock("Next due", canSchedule(job) ? job.next_due_utc : null, job.timezone, canSchedule(job) ? "" : `<span class="time-secondary">${job.deleted ? "Deleted" : "Disabled"}</span>`)}
-            <div class="job-health">
-              <div class="job-status-stack">
-                ${badge(state)}
-                <span class="detail">last result: ${escapeHtml(status)}</span>
-                ${disabledDetail ? `<span class="detail">${escapeHtml(disabledDetail)}</span>` : ""}
-                ${pausedUntil ? `<span class="detail">until ${pausedUntil}</span>` : ""}
-              </div>
-              ${renderJobRowStats(job)}
-            </div>
+            ${renderJobStateBlock(state, resultStatus, pausedUntil, disabledDetail)}
+            ${renderJobRowTimeBlock("Last run", job.last_evaluated_utc, job.timezone, "Never", triggerLabel(job.last_trigger))}
+            ${renderJobRowTimeBlock("Next due", canSchedule(job) ? job.next_due_utc : null, job.timezone, job.deleted ? "Deleted" : "Disabled")}
+            ${renderJobRowStats(job)}
           </button>
           <div id="${detailsId}" ${expanded ? "" : "hidden"}>
             ${expanded ? renderJobAccordion(job, actualIndex) : ""}

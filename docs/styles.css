@@ -798,8 +798,8 @@ legend {
 
 .job-main {
   display: grid;
-  grid-template-columns: minmax(250px, 1.28fr) minmax(210px, 0.9fr) minmax(210px, 0.9fr) minmax(330px, 1.18fr);
-  gap: 22px;
+  grid-template-columns: minmax(260px, 1.25fr) minmax(140px, 0.55fr) minmax(150px, 0.65fr) minmax(150px, 0.65fr) minmax(290px, 1fr);
+  gap: 20px;
   align-items: center;
   min-height: 118px;
   padding: 18px 22px;
@@ -825,12 +825,14 @@ legend {
 
 .job-identity,
 .job-time-block,
-.job-health {
+.job-state-block,
+.job-row-stats {
   min-width: 0;
 }
 
 .job-identity,
-.job-time-block {
+.job-time-block,
+.job-state-block {
   display: grid;
   align-content: center;
 }
@@ -845,7 +847,9 @@ legend {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
   min-width: 0;
+  margin-bottom: 4px;
 }
 
 .job-id {
@@ -868,6 +872,21 @@ legend {
   text-transform: uppercase;
 }
 
+.job-folder-chip {
+  flex: 0 1 auto;
+  min-height: 20px;
+  max-width: 100%;
+  padding: 2px 8px;
+  border: 1px solid color-mix(in srgb, var(--accent), var(--border) 62%);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent), transparent 90%);
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 740;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
 .field-label {
   display: block;
   color: var(--muted);
@@ -878,6 +897,21 @@ legend {
 .field-value {
   font-size: 14px;
   line-height: 1.35;
+}
+
+.row-time {
+  display: grid;
+  gap: 2px;
+}
+
+.row-time-clock {
+  color: var(--fg);
+  font-weight: 760;
+}
+
+.row-time-date {
+  color: var(--muted);
+  font-size: 12px;
 }
 
 code {
@@ -1026,18 +1060,18 @@ code {
   gap: 10px;
 }
 
-.job-health {
-  display: grid;
-  grid-template-columns: auto minmax(230px, 1fr);
-  gap: 18px;
-  align-items: center;
-}
-
-.job-status-stack {
+.job-state-block {
   display: grid;
   justify-items: start;
   align-content: center;
   gap: 4px;
+}
+
+.state-badges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
 .job-stats-strip {
@@ -1302,10 +1336,6 @@ footer {
     gap: 14px;
     min-height: 0;
     padding: 16px;
-  }
-  .job-health {
-    grid-template-columns: 1fr;
-    gap: 10px;
   }
   .job-row-stats {
     grid-template-columns: repeat(2, minmax(0, 1fr));
