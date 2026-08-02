@@ -1,5 +1,7 @@
 # cronjobs
 
+[![Validate job definitions](https://github.com/dibyanshusinha/cronjobs/actions/workflows/validate.yml/badge.svg)](https://github.com/dibyanshusinha/cronjobs/actions/workflows/validate.yml)
+
 `cronjobs` is a Node.js cron dispatcher for scheduled HTTP requests and scripts.
 It can run as a free GitHub-native public cron runner, or as a private
 self-hosted Docker Compose service.
@@ -8,6 +10,15 @@ Jobs are plain YAML files under `jobs/`. The same shared engine handles job
 discovery, `_defaults.yml` inheritance, schema validation, cron calculation,
 misfire handling, retries, timeouts, execution, deduplication, history, and
 dashboard summary generation for both deployment modes.
+
+![Dashboard preview](docs/dashboard-preview.svg)
+
+## Documentation
+
+- [Release notes](RELEASE_NOTES.md)
+- [Self-hosted deployment guide](docs/self-hosted.md)
+- [Contributing guide](CONTRIBUTING.md)
+- [Security policy](SECURITY.md)
 
 ## Deployment Modes
 
@@ -18,6 +29,35 @@ dashboard summary generation for both deployment modes.
 
 The standalone edition has no runtime dependency on GitHub Actions, GitHub
 Pages, GitHub Issues, or the GitHub API.
+
+## Project Status
+
+Current status:
+
+- GitHub edition is built, pushed, and verified with public example jobs.
+- Standalone Docker edition is implemented locally and merged into `main`.
+- Both deployment modes share the same Node.js core engine.
+- State storage is abstracted behind the `StateBackend` contract.
+- SQLite is the only standalone state backend enabled today.
+- Local verification currently covers tests, job validation, npm audit, and
+  Docker Compose configuration.
+- The local branch may be ahead of the published GitHub branch until release
+  commits are pushed.
+
+Not started:
+
+- PostgreSQL storage backend.
+- Multi-user authentication.
+- Encrypted secret store.
+- First-class private job management UI.
+- Additional notification adapters beyond GitHub Issues and standalone webhook/log.
+
+Planned features:
+
+- v1.1: richer standalone dashboard controls, more notification adapters,
+  import-from-curl, and per-job run-now UI.
+- v2.0: PostgreSQL adapter, multi-user auth, encrypted secret store, and
+  first-class private job management UI.
 
 ## Architecture
 

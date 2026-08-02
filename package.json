@@ -3,6 +3,25 @@
   "version": "1.0.0",
   "private": true,
   "description": "GitHub-native cron job dispatcher for scheduled HTTP requests and scripts, powered by GitHub Actions and Pages.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dibyanshusinha/cronjobs.git"
+  },
+  "bugs": {
+    "url": "https://github.com/dibyanshusinha/cronjobs/issues"
+  },
+  "homepage": "https://github.com/dibyanshusinha/cronjobs#readme",
+  "keywords": [
+    "cron",
+    "scheduler",
+    "github-actions",
+    "github-pages",
+    "self-hosted",
+    "docker",
+    "sqlite",
+    "automation"
+  ],
   "type": "commonjs",
   "engines": {
     "node": "24.13.1"
