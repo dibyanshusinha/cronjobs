@@ -9,5 +9,16 @@
     "auto_disabled_reason": null,
     "last_run_utc": "2026-08-02T06:43:12.446Z",
     "last_trigger": "scheduled"
+  },
+  "cronjobs-dashboard-self-check": {
+    "last_status": "success",
+    "consecutive_failures": 0,
+    "failure_pause_until_utc": null,
+    "auto_disabled": false,
+    "auto_disabled_at_utc": null,
+    "auto_disabled_reason": null,
+    "last_run_utc": "2026-08-02T07:33:49.537Z",
+    "last_trigger": "scheduled",
+    "last_evaluated_utc": "2026-08-02T07:33:48.531Z"
   }
 }

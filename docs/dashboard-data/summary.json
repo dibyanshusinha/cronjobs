@@ -1,17 +1,56 @@
 {
-  "generated_at": "2026-08-02T06:41:30.608Z",
+  "generated_at": "2026-08-02T07:33:48.531Z",
   "heartbeat": {
-    "last_run_utc": "2026-08-02T06:41:30.608Z",
+    "last_run_utc": "2026-08-02T07:33:48.531Z",
     "status": "ok",
-    "detail": "1 executed, 5 skipped"
+    "detail": "1 executed, 0 skipped"
   },
   "jobs": [
+    {
+      "id": "cronjobs-dashboard-self-check",
+      "name": "Cronjobs dashboard self-check",
+      "type": "http",
+      "file_path": "jobs/public/dashboard-self-check.job.yml",
+      "enabled": true,
+      "auto_disabled": false,
+      "auto_disabled_reason": null,
+      "failure_pause_until_utc": null,
+      "schedule": "*/15 * * * *",
+      "timezone": "Asia/Kolkata",
+      "history_retention_days": 365,
+      "failure_policy": {
+        "auto_disable_after_consecutive_failures": 5,
+        "initial_backoff_seconds": 300,
+        "backoff_multiplier": 2,
+        "max_backoff_seconds": 21600
+      },
+      "last_evaluated_utc": "2026-08-02T07:33:49.537Z",
+      "last_status": "success",
+      "last_trigger": "scheduled",
+      "consecutive_failures": 0,
+      "next_due_utc": "2026-08-02T07:45:00.000Z",
+      "open_issue": null,
+      "recent_history": [
+        {
+          "job_id": "cronjobs-dashboard-self-check",
+          "scheduled_time": "2026-08-02T07:30:00.000Z",
+          "status": "success",
+          "started_at": "2026-08-02T07:33:49.396Z",
+          "finished_at": "2026-08-02T07:33:49.537Z",
+          "duration_ms": 141,
+          "attempts": 1,
+          "detail": "HTTP 200",
+          "trigger": "scheduled",
+          "run_url": "https://github.com/dibyanshusinha/cronjobs/actions/runs/30738043714"
+        }
+      ]
+    },
     {
       "id": "example-backup-check",
       "name": "Example: backup check script",
       "type": "script",
       "file_path": "jobs/examples/backup-check.job.yml",
-      "enabled": true,
+      "enabled": false,
       "auto_disabled": false,
       "auto_disabled_reason": null,
       "failure_pause_until_utc": null,
@@ -57,10 +96,10 @@
     },
     {
       "id": "example-http-ping",
-      "name": "Example: ping httpbin",
+      "name": "Example: ping cronjobs dashboard",
       "type": "http",
       "file_path": "jobs/examples/ping-example.job.yml",
-      "enabled": true,
+      "enabled": false,
       "auto_disabled": false,
       "auto_disabled_reason": null,
       "failure_pause_until_utc": "2026-08-02T06:46:30.608Z",
@@ -77,7 +116,7 @@
       "last_status": "failed",
       "last_trigger": "scheduled",
       "consecutive_failures": 1,
-      "next_due_utc": "2026-08-02T06:45:00.000Z",
+      "next_due_utc": "2026-08-02T07:45:00.000Z",
       "open_issue": 1,
       "recent_history": [
         {
@@ -478,11 +517,11 @@
     }
   ],
   "meta": {
-    "total_jobs": 2,
+    "total_jobs": 3,
     "failing_jobs": 1,
-    "executions_24h": 14,
+    "executions_24h": 15,
     "success_rate_24h": 93,
     "failures_24h": 1,
-    "avg_duration_ms_24h": 7740
+    "avg_duration_ms_24h": 7233
   }
 }
