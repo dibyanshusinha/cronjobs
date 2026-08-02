@@ -179,6 +179,19 @@ Actions tab -> **Dispatch cron jobs** -> **Run workflow** -> enter `job_id`.
 Manual runs bypass the schedule but not the `enabled` flag. Running a disabled
 or auto-disabled job requires `force_disabled`.
 
+## Enabling and disabling jobs
+
+Jobs are enabled or disabled in their `.job.yml` file:
+
+```yaml
+enabled: false
+```
+
+The GitHub Pages dashboard is static, so it does not directly commit changes to
+`main`. Each expanded job card includes a management helper that copies the
+exact enable/disable edit instructions for that job file. After editing, run
+`npm run validate`, commit, and push.
+
 ## Failure backoff and auto-disable
 
 Each job has a failure policy. Defaults are intentionally conservative:
@@ -206,9 +219,10 @@ The dashboard shows `paused` and `disabled` states separately.
 
 Recent history is shown inside each expandable job card with pagination so long
 failure or skip streaks do not overwhelm the page. The dashboard summary
-publishes a capped recent slice per job, while full archived history continues
-to be stored under `history/archive/YYYY-MM/` on the `cron-state` branch.
-Archive cleanup follows each job's `history_retention_days` setting.
+publishes a capped recent slice per job plus 24-hour statistics such as run
+count, success rate, and average duration. Full archived history continues to be
+stored under `history/archive/YYYY-MM/` on the `cron-state` branch. Archive
+cleanup follows each job's `history_retention_days` setting.
 
 ## Script jobs
 
