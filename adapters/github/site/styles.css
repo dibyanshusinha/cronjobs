@@ -1,31 +1,51 @@
 :root {
   color-scheme: light;
-  --bg: #f6f7f9;
+  --bg: #f4f7fb;
   --surface: #ffffff;
-  --surface-2: #f0f3f6;
-  --fg: #15191f;
-  --muted: #637083;
-  --border: #d8dee7;
-  --ok: #167a3f;
-  --fail: #c93a3a;
-  --warn: #986600;
-  --disabled: #737b87;
-  --link: #1c64d1;
+  --surface-2: #eef3f9;
+  --surface-3: #e7edf6;
+  --fg: #101827;
+  --muted: #60708a;
+  --border: #d8e2ef;
+  --ok: #15803d;
+  --ok-bg: #dcfce7;
+  --fail: #b42318;
+  --fail-bg: #fee4e2;
+  --warn: #b45309;
+  --warn-bg: #fef3c7;
+  --disabled: #64748b;
+  --disabled-bg: #e2e8f0;
+  --link: #2563eb;
+  --accent: #2563eb;
+  --accent-contrast: #ffffff;
+  --focus: #93c5fd;
+  --shadow: 0 10px 26px rgba(15, 23, 42, 0.07);
+  --shadow-strong: 0 24px 70px rgba(15, 23, 42, 0.2);
 }
 
 html[data-theme="dark"] {
   color-scheme: dark;
-  --bg: #0f1216;
-  --surface: #171b21;
-  --surface-2: #202630;
-  --fg: #eef2f6;
-  --muted: #a4adba;
-  --border: #333b48;
-  --ok: #48c774;
-  --fail: #ff6b6b;
-  --warn: #f0b94b;
-  --disabled: #8b95a3;
-  --link: #7cb3ff;
+  --bg: #0b1020;
+  --surface: #111827;
+  --surface-2: #172033;
+  --surface-3: #202a3f;
+  --fg: #f8fafc;
+  --muted: #94a3b8;
+  --border: #263348;
+  --ok: #4ade80;
+  --ok-bg: rgba(34, 197, 94, 0.14);
+  --fail: #f87171;
+  --fail-bg: rgba(248, 113, 113, 0.14);
+  --warn: #fbbf24;
+  --warn-bg: rgba(251, 191, 36, 0.14);
+  --disabled: #94a3b8;
+  --disabled-bg: rgba(148, 163, 184, 0.14);
+  --link: #93c5fd;
+  --accent: #60a5fa;
+  --accent-contrast: #07111f;
+  --focus: #38bdf8;
+  --shadow: 0 14px 36px rgba(0, 0, 0, 0.22);
+  --shadow-strong: 0 28px 80px rgba(0, 0, 0, 0.42);
 }
 
 html[data-theme="light"] {
@@ -44,7 +64,7 @@ body {
 
 .topbar {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 20px;
   max-width: 1180px;
@@ -72,6 +92,7 @@ h1 {
   padding: 10px 12px;
   font-size: 14px;
   line-height: 1.35;
+  box-shadow: var(--shadow);
 }
 
 .top-actions {
@@ -95,10 +116,12 @@ h1 {
   font-size: 18px;
   line-height: 1;
   padding: 0;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
 }
 
 .icon-button:hover {
-  border-color: var(--muted);
+  border-color: var(--accent);
+  transform: translateY(-1px);
 }
 
 #theme-toggle {
@@ -108,7 +131,7 @@ h1 {
   z-index: 20;
   border-radius: 999px;
   background: var(--surface);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+  box-shadow: var(--shadow-strong);
 }
 
 .heartbeat::before {
@@ -142,6 +165,7 @@ main {
   border-radius: 8px;
   background: var(--surface);
   padding: 14px;
+  box-shadow: var(--shadow);
 }
 
 .metric-label {
@@ -154,6 +178,7 @@ main {
   margin-top: 5px;
   font-size: 24px;
   font-weight: 700;
+  color: var(--fg);
 }
 
 .jobs-grid {
@@ -170,7 +195,7 @@ main {
   background: var(--surface);
   color: var(--fg);
   overflow: hidden;
-  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
+  box-shadow: var(--shadow-strong);
 }
 
 .job-modal::backdrop {
@@ -216,7 +241,7 @@ main {
   border-radius: 8px;
   background: var(--surface);
   color: var(--fg);
-  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.38);
+  box-shadow: var(--shadow-strong);
 }
 
 .confirm-modal::backdrop {
@@ -313,6 +338,15 @@ textarea {
   padding: 9px 10px;
   font: inherit;
   font-size: 14px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: 0;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus), transparent 62%);
 }
 
 textarea {
@@ -358,8 +392,9 @@ legend {
 }
 
 .type-option:has(input:checked) {
-  border-color: var(--link);
-  background: color-mix(in srgb, var(--link), transparent 90%);
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent), transparent 90%);
+  box-shadow: inset 3px 0 0 var(--accent);
 }
 
 .type-option input {
@@ -402,6 +437,7 @@ legend {
 
 .day-pill:has(input:checked) {
   border-color: var(--warn);
+  background: var(--warn-bg);
   color: var(--warn);
 }
 
@@ -467,16 +503,25 @@ legend {
   padding: 0 12px;
   color: var(--fg);
   cursor: pointer;
+  font-weight: 700;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .primary-action {
-  background: var(--fg);
-  color: var(--bg);
-  border-color: var(--fg);
+  background: var(--accent);
+  color: var(--accent-contrast);
+  border-color: var(--accent);
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--accent), transparent 75%);
 }
 
 .secondary-action {
   background: var(--surface-2);
+}
+
+.primary-action:hover,
+.secondary-action:hover {
+  transform: translateY(-1px);
+  border-color: var(--accent);
 }
 
 .small-action {
@@ -487,6 +532,7 @@ legend {
 .copy-action {
   width: 100%;
   margin: 10px 0 14px;
+  min-height: 42px;
 }
 
 .secondary-action:disabled {
@@ -525,7 +571,7 @@ legend {
 .help-text {
   border: 1px solid var(--border);
   border-radius: 8px;
-  background: var(--bg);
+  background: var(--surface-2);
   color: var(--muted);
   padding: 10px;
   font-size: 13px;
@@ -555,6 +601,14 @@ legend {
   border-radius: 8px;
   background: var(--surface);
   overflow: hidden;
+  box-shadow: var(--shadow);
+  transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.job-card:hover {
+  border-color: color-mix(in srgb, var(--accent), var(--border) 55%);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-strong);
 }
 
 .job-main {
@@ -606,11 +660,31 @@ code {
   border: 1px solid var(--border);
 }
 
-.badge.success { color: var(--ok); }
-.badge.failed { color: var(--fail); }
-.badge.skipped, .badge.paused { color: var(--warn); }
-.badge.disabled { color: var(--disabled); }
-.badge.unknown { color: var(--muted); }
+.badge.success {
+  color: var(--ok);
+  background: var(--ok-bg);
+  border-color: color-mix(in srgb, var(--ok), transparent 68%);
+}
+
+.badge.failed {
+  color: var(--fail);
+  background: var(--fail-bg);
+  border-color: color-mix(in srgb, var(--fail), transparent 68%);
+}
+
+.badge.skipped,
+.badge.paused {
+  color: var(--warn);
+  background: var(--warn-bg);
+  border-color: color-mix(in srgb, var(--warn), transparent 68%);
+}
+
+.badge.disabled,
+.badge.unknown {
+  color: var(--disabled);
+  background: var(--disabled-bg);
+  border-color: color-mix(in srgb, var(--disabled), transparent 68%);
+}
 
 .time-secondary,
 .detail {
@@ -634,10 +708,12 @@ code {
   height: 34px;
   cursor: pointer;
   font-size: 16px;
+  transition: border-color 0.15s ease, transform 0.15s ease;
 }
 
 .toggle:hover {
-  border-color: var(--muted);
+  border-color: var(--accent);
+  transform: translateY(-1px);
 }
 
 .details {
@@ -670,6 +746,7 @@ code {
   background: var(--surface);
   padding: 10px;
   font-size: 13px;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
 }
 
 .history-item[hidden] {
@@ -698,6 +775,7 @@ a { color: var(--link); }
   background: var(--surface);
   padding: 18px;
   color: var(--muted);
+  box-shadow: var(--shadow);
 }
 
 .error-state { color: var(--fail); }

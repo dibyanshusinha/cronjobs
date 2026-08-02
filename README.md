@@ -109,12 +109,12 @@ Nested folders are supported and are only for organization.
 
 The dashboard includes a **Create job** helper. It opens as a focused dialog so
 the monitoring view stays clean. It lets you fill out the fields, add HTTP
-headers, skip selected weekdays, generate copy-ready YAML, simulate upcoming run
-times, and test a public HTTP request directly from your browser after an
-explicit confirmation. The YAML stays collapsed behind a preview because the
-normal path is to use the copy button. The browser test is useful when you want
-the receiving service to see your current browser/network IP instead of a GitHub
-Actions runner IP.
+headers, skip selected weekdays, set job timeouts and failure safeguards,
+generate copy-ready YAML, simulate upcoming run times, and test a public HTTP
+request directly from your browser after an explicit confirmation. The YAML
+stays collapsed behind a preview because the normal path is to use the copy
+button. The browser test is useful when you want the receiving service to see
+your current browser/network IP instead of a GitHub Actions runner IP.
 
 Scheduled jobs still run from GitHub Actions, so production executions will
 come from GitHub-hosted runner infrastructure unless you later move the job to a
