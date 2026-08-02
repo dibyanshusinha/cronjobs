@@ -335,6 +335,18 @@
       "detail": "skipped by misfire policy (a more recent occurrence ran instead)",
       "trigger": "scheduled",
       "run_url": null
+    },
+    {
+      "job_id": "example-http-ping",
+      "scheduled_time": "2026-08-02T06:30:00.000Z",
+      "status": "failed",
+      "started_at": "2026-08-02T06:41:31.613Z",
+      "finished_at": "2026-08-02T06:43:12.446Z",
+      "duration_ms": 100833,
+      "attempts": 3,
+      "detail": "request error: AbortError",
+      "trigger": "scheduled",
+      "run_url": "https://github.com/dibyanshusinha/cronjobs/actions/runs/30736368057"
     }
   ]
 }

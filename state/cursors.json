@@ -1,13 +1,13 @@
 {
   "example-http-ping": {
-    "consecutive_failures": 0,
-    "last_evaluated_utc": "2026-08-02T05:03:21.311Z",
-    "last_status": "success",
-    "failure_pause_until_utc": null,
+    "consecutive_failures": 1,
+    "last_evaluated_utc": "2026-08-02T06:41:30.608Z",
+    "last_status": "failed",
+    "failure_pause_until_utc": "2026-08-02T06:46:30.608Z",
     "auto_disabled": false,
     "auto_disabled_at_utc": null,
     "auto_disabled_reason": null,
-    "last_run_utc": "2026-08-02T05:03:24.789Z",
+    "last_run_utc": "2026-08-02T06:43:12.446Z",
     "last_trigger": "scheduled"
   }
 }
