@@ -13,6 +13,7 @@
       <p id="generated" class="subtle">Loading dashboard data...</p>
     </div>
     <div class="top-actions">
+      <button id="open-builder" class="primary-action" type="button">Create job</button>
       <button id="theme-toggle" class="icon-button" type="button" title="Switch theme" aria-label="Switch theme">☾</button>
       <div id="heartbeat" class="heartbeat unknown">No heartbeat yet</div>
     </div>
@@ -20,12 +21,19 @@
 
   <main>
     <section id="summary" class="summary-grid" aria-label="Summary"></section>
-    <section class="builder-card" aria-labelledby="builder-title">
-      <div class="builder-head">
+    <section id="jobs" class="jobs-grid" aria-label="Jobs">
+      <div class="empty-state">Loading jobs...</div>
+    </section>
+  </main>
+
+  <dialog id="job-modal" class="job-modal" aria-labelledby="builder-title">
+    <div class="modal-shell">
+      <div class="modal-head">
         <div>
           <h2 id="builder-title">Create a New Job</h2>
-          <p class="subtle">Build a job file, preview its schedule, and copy the YAML into the repo.</p>
+          <p class="subtle">Build YAML, preview upcoming runs, test public HTTP jobs, then paste the file into the repo.</p>
         </div>
+        <button id="close-builder" class="icon-button" type="button" title="Close" aria-label="Close">×</button>
       </div>
       <div class="builder-grid">
         <form id="job-builder" class="builder-form">
@@ -72,7 +80,13 @@
               <label>Expected status codes<input name="expected_status" value="200" /></label>
             </div>
             <label>URL<input name="url" value="https://httpbin.org/status/200" /></label>
-            <label>Headers <span class="label-note">one per line: Name: value</span><textarea name="headers" rows="3"></textarea></label>
+            <fieldset class="headers-editor">
+              <legend>Headers</legend>
+              <div id="headers-list" class="headers-list">
+                <div class="header-empty">No custom headers defined.</div>
+              </div>
+              <button type="button" id="add-header" class="secondary-action small-action">+ Add header</button>
+            </fieldset>
             <label>Body<textarea name="body" rows="3"></textarea></label>
           </div>
 
@@ -90,12 +104,20 @@
             <label>Arguments <span class="label-note">space separated</span><input name="args" value="--verbose" /></label>
           </div>
 
-          <div class="form-row three">
-            <label>Retries<input name="retries" type="number" min="0" max="20" value="2" /></label>
-            <label>Auto-disable after failures<input name="auto_disable" type="number" min="1" max="100" value="5" /></label>
-            <label>History retention days<input name="retention" type="number" min="1" max="3650" value="365" /></label>
-          </div>
-          <label class="checkline"><input name="send_test" type="checkbox" /> Allow one browser test request to the HTTP URL. The target will see this browser/network IP, not a GitHub runner IP.</label>
+          <details class="advanced-panel">
+            <summary>Advanced safeguards</summary>
+            <div class="form-row three">
+              <label>Retries<input name="retries" type="number" min="0" max="20" value="2" /></label>
+              <label>Auto-disable after failures<input name="auto_disable" type="number" min="1" max="100" value="5" /></label>
+              <label>History retention days<input name="retention" type="number" min="1" max="3650" value="365" /></label>
+            </div>
+            <div class="form-row three">
+              <label>Initial backoff seconds<input name="initial_backoff" type="number" min="0" max="86400" value="300" /></label>
+              <label>Backoff multiplier<input name="backoff_multiplier" type="number" min="1" max="10" step="0.1" value="2" /></label>
+              <label>Max backoff seconds<input name="max_backoff" type="number" min="0" max="604800" value="21600" /></label>
+            </div>
+          </details>
+          <label class="checkline"><input name="send_test" type="checkbox" /> Allow one browser test request to the HTTP URL. The target sees this browser/network IP. Scheduled jobs still run from GitHub Actions.</label>
           <div class="button-row">
             <button type="button" id="simulate-job" class="primary-action">Simulate schedule</button>
             <button type="button" id="test-job" class="secondary-action">Test HTTP</button>
@@ -118,7 +140,7 @@
           </div>
           <div class="output-block">
             <span class="field-label">Test result</span>
-            <div id="test-output" class="help-text">HTTP tests run directly from your browser, so the receiving service sees your browser/network IP. Scheduled jobs still run from GitHub Actions unless you use a self-hosted runner.</div>
+            <div id="test-output" class="help-text">HTTP tests run directly from your browser, so the receiving service sees your browser/network IP. Browser security may block CORS-only endpoints even when GitHub Actions can call them.</div>
           </div>
           <div class="instructions">
             <strong>How to add it</strong>
@@ -131,11 +153,24 @@
           </div>
         </div>
       </div>
-    </section>
-    <section id="jobs" class="jobs-grid" aria-label="Jobs">
-      <div class="empty-state">Loading jobs...</div>
-    </section>
-  </main>
+    </div>
+  </dialog>
+
+  <dialog id="test-confirm-modal" class="confirm-modal" aria-labelledby="test-confirm-title">
+    <div class="confirm-shell">
+      <h2 id="test-confirm-title">Perform test run?</h2>
+      <p id="test-confirm-url" class="subtle"></p>
+      <p>This will send one real HTTP request using the current unsaved settings and display the result in the job builder.</p>
+      <div class="notice">
+        <strong>Note</strong>
+        <span>For browser tests, the destination sees your browser/network IP. Scheduled executions still come from GitHub Actions unless you move the job to a self-hosted runner.</span>
+      </div>
+      <div class="confirm-actions">
+        <button type="button" id="cancel-test" class="secondary-action">Cancel</button>
+        <button type="button" id="confirm-test" class="primary-action">Start test run</button>
+      </div>
+    </div>
+  </dialog>
 
   <footer>
     <span id="viewer-tz"></span>

@@ -191,6 +191,18 @@
       "detail": "skipped by misfire policy (a more recent occurrence ran instead)",
       "trigger": "scheduled",
       "run_url": null
+    },
+    {
+      "job_id": "example-http-ping",
+      "scheduled_time": "2026-08-02T03:30:00.000Z",
+      "status": "success",
+      "started_at": "2026-08-02T03:33:55.397Z",
+      "finished_at": "2026-08-02T03:33:55.785Z",
+      "duration_ms": 388,
+      "attempts": 1,
+      "detail": "HTTP 200",
+      "trigger": "scheduled",
+      "run_url": "https://github.com/dibyanshusinha/cronjobs/actions/runs/30730834969"
     }
   ]
 }
