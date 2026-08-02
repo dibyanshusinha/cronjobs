@@ -215,14 +215,29 @@ auto-disable state.
 
 The dashboard shows `paused` and `disabled` states separately.
 
+## Dashboard statistics
+
+The main dashboard is intentionally a consolidated operations view. It shows:
+
+- total jobs, failures, disabled jobs, 24-hour run count, success rate, and
+  average duration;
+- a 24-hour activity graph;
+- a recent status mix graph;
+- compact per-job trend dots for quick scanning;
+- a paginated job list so large repositories do not become one long page.
+
+Selecting a job opens a focused job-detail panel with that job's own run count,
+success rate, failure count, average duration, duration trend, status mix,
+schedule, failure policy, management helper, and paginated recent history.
+
 ## History display and cleanup
 
-Recent history is shown inside each expandable job card with pagination so long
-failure or skip streaks do not overwhelm the page. The dashboard summary
-publishes a capped recent slice per job plus 24-hour statistics such as run
-count, success rate, and average duration. Full archived history continues to be
-stored under `history/archive/YYYY-MM/` on the `cron-state` branch. Archive
-cleanup follows each job's `history_retention_days` setting.
+Recent history is shown in each job's focused detail view with pagination so
+long failure or skip streaks do not overwhelm the main page. The dashboard
+summary publishes a capped recent slice per job plus 24-hour statistics such as
+run count, success rate, and average duration. Full archived history continues
+to be stored under `history/archive/YYYY-MM/` on the `cron-state` branch.
+Archive cleanup follows each job's `history_retention_days` setting.
 
 ## Script jobs
 
