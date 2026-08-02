@@ -782,7 +782,8 @@ legend {
 
 .job-card.selected {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus), transparent 70%), var(--shadow);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus), transparent 72%), var(--shadow);
+  transform: none;
 }
 
 .job-main {
@@ -805,6 +806,10 @@ legend {
 
 .job-select:hover {
   background: color-mix(in srgb, var(--accent), transparent 96%);
+}
+
+.job-select[aria-expanded="true"] {
+  background: color-mix(in srgb, var(--accent), transparent 93%);
 }
 
 .job-title {
@@ -887,16 +892,19 @@ code {
   justify-content: flex-end;
 }
 
-.open-indicator {
+.accordion-indicator {
   display: inline-flex;
   align-items: center;
-  min-height: 32px;
-  padding: 0 12px;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
   border: 1px solid var(--border);
   border-radius: 8px;
   color: var(--link);
-  font-size: 13px;
+  background: var(--surface-2);
+  font-size: 20px;
   font-weight: 700;
+  line-height: 1;
 }
 
 .toggle {
@@ -952,6 +960,26 @@ code {
   white-space: nowrap;
 }
 
+.jobs-tools {
+  display: flex;
+  align-items: end;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.filter-field {
+  width: min(320px, 100%);
+  margin: 0;
+}
+
+.filter-field span {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+
 .jobs-list {
   display: grid;
   gap: 10px;
@@ -969,39 +997,10 @@ code {
   font-size: 14px;
 }
 
-.job-detail-section {
-  margin-top: 16px;
-}
-
-.job-detail-card {
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--surface);
+.accordion-body {
+  border-top: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface-2), var(--surface) 35%);
   padding: 16px;
-  box-shadow: var(--shadow);
-}
-
-.job-detail-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 14px;
-}
-
-.job-detail-head h2 {
-  margin: 8px 0 4px;
-  font-size: 22px;
-}
-
-.link-button {
-  border: 0;
-  background: transparent;
-  color: var(--link);
-  cursor: pointer;
-  padding: 0;
-  font: inherit;
-  font-weight: 700;
 }
 
 .job-detail-grid {
@@ -1175,9 +1174,14 @@ footer {
   .header-row .remove-header { width: 100%; }
   .job-main { grid-template-columns: 1fr; }
   .job-stats-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .section-head,
-  .job-detail-head {
+  .section-head {
     display: grid;
+  }
+  .jobs-tools {
+    justify-content: stretch;
+  }
+  .filter-field {
+    width: 100%;
   }
   .pager {
     justify-content: space-between;
