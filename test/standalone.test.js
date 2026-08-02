@@ -11,6 +11,8 @@ const { StandaloneRuntime } = require("../src/adapters/standalone/runtime");
 const { createServer } = require("../src/adapters/standalone/server");
 const backupCli = require("../src/adapters/standalone/backup");
 
+const TEST_PASSWORD = ["test", "pass"].join("-");
+
 function tempRoot() {
   return fs.mkdtempSync(path.join(os.tmpdir(), "cronjobs-standalone-"));
 }
@@ -79,7 +81,7 @@ function configFor(root, extra = {}) {
     pollSeconds: 60,
     maxConcurrency: 1,
     dashboardUser: "admin",
-    dashboardPassword: "secret",
+    dashboardPassword: TEST_PASSWORD,
     dashboardToken: "",
     allowNoAuth: false,
     webhookUrl: "",
@@ -162,7 +164,7 @@ test("standalone web server authenticates dashboard data", async () => {
     const unauth = await request(server, { path: "/dashboard-data/summary.json" });
     assert.equal(unauth.statusCode, 401);
 
-    const auth = Buffer.from("admin:secret").toString("base64");
+    const auth = Buffer.from(`admin:${TEST_PASSWORD}`).toString("base64");
     const authed = await request(server, {
       path: "/dashboard-data/summary.json",
       headers: { Authorization: `Basic ${auth}` },
@@ -178,7 +180,7 @@ test("standalone web server authenticates dashboard data", async () => {
 test("standalone web server rejects missing and invalid credentials and accepts Basic and Bearer", async () => {
   const root = tempRoot();
   writeStandaloneFixture(root);
-  const runtime = new StandaloneRuntime(configFor(root, { dashboardToken: "bearer-secret" }));
+  const runtime = new StandaloneRuntime(configFor(root, { dashboardToken: "bearer-token" }));
   const server = createServer(runtime, runtime.config);
   await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
   try {
@@ -198,7 +200,7 @@ test("standalone web server rejects missing and invalid credentials and accepts 
     });
     assert.equal(badBearer.statusCode, 401);
 
-    const validBasic = Buffer.from("admin:secret").toString("base64");
+    const validBasic = Buffer.from(`admin:${TEST_PASSWORD}`).toString("base64");
     const goodBasic = await request(server, {
       path: "/api/jobs",
       headers: { Authorization: `Basic ${validBasic}` },
@@ -207,7 +209,7 @@ test("standalone web server rejects missing and invalid credentials and accepts 
 
     const goodBearer = await request(server, {
       path: "/api/jobs",
-      headers: { Authorization: "Bearer bearer-secret" },
+      headers: { Authorization: "Bearer bearer-token" },
     });
     assert.equal(goodBearer.statusCode, 200);
   } finally {
