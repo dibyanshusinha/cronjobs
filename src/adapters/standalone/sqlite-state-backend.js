@@ -4,9 +4,19 @@ const fs = require("fs");
 const path = require("path");
 const { DatabaseSync } = require("node:sqlite");
 
+function copyIfExists(src, dest) {
+  if (!fs.existsSync(src)) return false;
+  fs.mkdirSync(path.dirname(dest), { recursive: true });
+  fs.copyFileSync(src, dest);
+  return true;
+}
+
 class SqliteStateBackend {
+  static backendType = "sqlite";
+
   constructor(dbPath) {
     this.dbPath = dbPath;
+    this.existedBeforeOpen = fs.existsSync(dbPath);
     fs.mkdirSync(path.dirname(dbPath), { recursive: true });
     this.db = new DatabaseSync(dbPath);
     this.db.exec(`
@@ -48,6 +58,15 @@ class SqliteStateBackend {
 
   close() {
     this.db.close();
+  }
+
+  exportToDirectory(targetDir) {
+    if (!this.existedBeforeOpen) return false;
+    return copyIfExists(this.dbPath, path.join(targetDir, path.basename(this.dbPath)));
+  }
+
+  restoreFromDirectory(sourceDir) {
+    return copyIfExists(path.join(sourceDir, path.basename(this.dbPath)), this.dbPath);
   }
 }
 

@@ -33,6 +33,7 @@ function loadConfig(repoRoot = path.resolve(__dirname, "../../..")) {
   return {
     repoRoot,
     dataDir,
+    stateBackend: process.env.STATE_BACKEND || "sqlite",
     dbPath: path.resolve(process.env.SQLITE_PATH || path.join(dataDir, "cronjobs.sqlite")),
     jobsDir: path.resolve(process.env.JOBS_DIR || path.join(repoRoot, "jobs")),
     scriptsRoot: path.resolve(process.env.SCRIPTS_ROOT || repoRoot),

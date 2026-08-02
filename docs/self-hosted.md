@@ -17,6 +17,9 @@ The service does not call GitHub Actions, GitHub Pages, GitHub Issues, or the Gi
 Node is pinned to 24.13.1 in `package.json` and the Docker image. The SQLite adapter uses
 Node's built-in `node:sqlite` module, which is currently experimental, so keep the pinned Node
 version until the SQLite behavior is deliberately retested on a newer runtime.
+Standalone state storage is selected with `STATE_BACKEND`; `sqlite` is the only enabled value
+today. Future database backends can be added behind the shared state backend contract without
+changing scheduler, ledger, history, or dashboard code.
 
 ## Quick Start
 
@@ -125,7 +128,7 @@ Restore:
 npm run standalone:restore -- ./backups/manual-20260802
 ```
 
-Stop the Docker service before restoring SQLite data.
+Stop the Docker service before restoring backend state data.
 
 ## Upgrade
 

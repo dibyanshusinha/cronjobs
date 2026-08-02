@@ -3,6 +3,7 @@
 const fs = require("fs");
 const path = require("path");
 const { loadConfig } = require("./config");
+const { createStateBackend } = require("./state-backend-factory");
 
 function copyIfExists(src, dest) {
   if (!fs.existsSync(src)) return false;
@@ -19,30 +20,44 @@ function timestamp() {
 function backup(targetDir = process.env.BACKUP_DIR) {
   const config = loadConfig();
   const root = path.resolve(targetDir || path.join(config.dataDir, "backups", timestamp()));
+  const backend = createStateBackend(config);
   fs.mkdirSync(root, { recursive: true });
-  const manifest = {
-    created_at: new Date().toISOString(),
-    copied: {
-      jobs: copyIfExists(config.jobsDir, path.join(root, "jobs")),
-      scripts: copyIfExists(path.join(config.scriptsRoot, "scripts"), path.join(root, "scripts")),
-      sqlite: copyIfExists(config.dbPath, path.join(root, "data", path.basename(config.dbPath))),
-    },
-  };
-  fs.writeFileSync(path.join(root, "manifest.json"), `${JSON.stringify(manifest, null, 2)}\n`);
-  return { root, manifest };
+  try {
+    const manifest = {
+      created_at: new Date().toISOString(),
+      state_backend: config.stateBackend,
+      copied: {
+        jobs: copyIfExists(config.jobsDir, path.join(root, "jobs")),
+        scripts: copyIfExists(path.join(config.scriptsRoot, "scripts"), path.join(root, "scripts")),
+        state: backend.exportToDirectory ? backend.exportToDirectory(path.join(root, "data")) : false,
+      },
+    };
+    fs.writeFileSync(path.join(root, "manifest.json"), `${JSON.stringify(manifest, null, 2)}\n`);
+    return { root, manifest };
+  } finally {
+    backend.close?.();
+  }
 }
 
 function restore(sourceDir = process.env.RESTORE_DIR) {
   if (!sourceDir) throw new Error("RESTORE_DIR or first argument is required");
   const config = loadConfig();
+  const backend = createStateBackend(config);
   const root = path.resolve(sourceDir);
-  if (!fs.existsSync(root)) throw new Error(`backup directory does not exist: ${root}`);
-  const copied = {
-    jobs: copyIfExists(path.join(root, "jobs"), config.jobsDir),
-    scripts: copyIfExists(path.join(root, "scripts"), path.join(config.scriptsRoot, "scripts")),
-    sqlite: copyIfExists(path.join(root, "data", path.basename(config.dbPath)), config.dbPath),
-  };
-  return { root, copied };
+  let closed = false;
+  try {
+    if (!fs.existsSync(root)) throw new Error(`backup directory does not exist: ${root}`);
+    backend.close?.();
+    closed = true;
+    const copied = {
+      jobs: copyIfExists(path.join(root, "jobs"), config.jobsDir),
+      scripts: copyIfExists(path.join(root, "scripts"), path.join(config.scriptsRoot, "scripts")),
+      state: backend.restoreFromDirectory ? backend.restoreFromDirectory(path.join(root, "data")) : false,
+    };
+    return { root, copied };
+  } finally {
+    if (!closed) backend.close?.();
+  }
 }
 
 function main() {

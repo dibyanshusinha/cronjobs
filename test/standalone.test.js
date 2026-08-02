@@ -8,6 +8,7 @@ const path = require("path");
 const test = require("node:test");
 const { SqliteStateBackend } = require("../src/adapters/standalone/sqlite-state-backend");
 const { StandaloneRuntime } = require("../src/adapters/standalone/runtime");
+const { createStateBackend } = require("../src/adapters/standalone/state-backend-factory");
 const { createServer } = require("../src/adapters/standalone/server");
 const backupCli = require("../src/adapters/standalone/backup");
 
@@ -126,6 +127,17 @@ test("SqliteStateBackend persists JSON state", () => {
   assert.deepEqual(reopened.load("state/example", {}), { ok: true, count: 2 });
   assert.deepEqual(reopened.list("state"), ["state/example"]);
   reopened.close();
+});
+
+test("standalone state backend factory selects SQLite and rejects unsupported backends", () => {
+  const root = tempRoot();
+  const sqlite = createStateBackend(configFor(root));
+  try {
+    assert.equal(sqlite.constructor.backendType, "sqlite");
+  } finally {
+    sqlite.close();
+  }
+  assert.throws(() => createStateBackend(configFor(root, { stateBackend: "postgres" })), /unsupported/);
 });
 
 test("standalone runtime manually executes a script job without GitHub environment", async () => {
@@ -272,7 +284,9 @@ test("backup and restore copy jobs, scripts, and SQLite data", () => {
   const root = tempRoot();
   writeStandaloneFixture(root);
   fs.mkdirSync(path.join(root, "data"), { recursive: true });
-  fs.writeFileSync(path.join(root, "data", "cronjobs.sqlite"), "not-a-real-db-for-copy-test");
+  const sourceBackend = new SqliteStateBackend(path.join(root, "data", "cronjobs.sqlite"));
+  sourceBackend.save("state/example", { restored: true });
+  sourceBackend.close();
   const backupDir = path.join(root, "backup");
   const restoreRoot = tempRoot();
 
@@ -292,7 +306,12 @@ test("backup and restore copy jobs, scripts, and SQLite data", () => {
 
     assert.equal(fs.existsSync(path.join(restoreRoot, "jobs", "script.job.yml")), true);
     assert.equal(fs.existsSync(path.join(restoreRoot, "scripts", "examples", "ok.sh")), true);
-    assert.equal(fs.readFileSync(path.join(restoreRoot, "data", "cronjobs.sqlite"), "utf8"), "not-a-real-db-for-copy-test");
+    const restoredBackend = new SqliteStateBackend(path.join(restoreRoot, "data", "cronjobs.sqlite"));
+    try {
+      assert.deepEqual(restoredBackend.load("state/example", {}), { restored: true });
+    } finally {
+      restoredBackend.close();
+    }
   } finally {
     process.env = oldEnv;
   }

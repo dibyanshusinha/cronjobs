@@ -7,8 +7,8 @@ const dispatch = require("../../engine/dispatch");
 const schema = require("../../engine/schema");
 const { HistoryStore } = require("../../engine/history");
 const { Ledger } = require("../../engine/ledger");
-const { SqliteStateBackend } = require("./sqlite-state-backend");
 const { StandaloneNotifier } = require("./notifier");
+const { createStateBackend } = require("./state-backend-factory");
 
 function loadJobs(config) {
   return discovery.discoverJobs(config.jobsDir);
@@ -32,7 +32,7 @@ function applyOverrides(jobs, overrides) {
 }
 
 class StandaloneRuntime {
-  constructor(config, backend = new SqliteStateBackend(config.dbPath)) {
+  constructor(config, backend = createStateBackend(config)) {
     this.config = config;
     this.backend = backend;
     this.ledger = new Ledger(backend);

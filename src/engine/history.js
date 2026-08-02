@@ -1,5 +1,7 @@
 "use strict";
 
+const { assertStateBackend } = require("./state-backend");
+
 const MAX_DETAIL_CHARS = 300;
 const SENSITIVE_KEY = /(SECRET|TOKEN|PASSWORD|PASS|KEY|AUTH|CREDENTIAL)/i;
 
@@ -27,7 +29,7 @@ function sanitize(result) {
 
 class HistoryStore {
   constructor(backend) {
-    this.backend = backend;
+    this.backend = assertStateBackend(backend, "HistoryStore backend");
   }
 
   name(jobId) {

@@ -43,6 +43,8 @@ src/adapters/github/                         src/adapters/standalone/
 
 Core modules live under `src/engine/` and do not import deployment-specific
 code. Adapters provide storage, notification, trigger, and hosting behavior.
+State storage follows the `StateBackend` contract in `src/engine/state-backend.js`;
+GitHub mode uses JSON files and standalone mode currently enables SQLite.
 
 ## Requirements
 
@@ -316,7 +318,7 @@ standalone dashboard is served by the local authenticated Node server.
 
 ## Backup And Restore
 
-Standalone backups include jobs, scripts, SQLite data, and a manifest:
+Standalone backups include jobs, scripts, backend state data, and a manifest:
 
 ```bash
 npm run standalone:backup -- ./backups/manual-$(date +%Y%m%d)
@@ -328,7 +330,7 @@ Restore:
 npm run standalone:restore -- ./backups/manual-20260802
 ```
 
-Stop the standalone service before restoring SQLite data.
+Stop the standalone service before restoring backend state data.
 
 In GitHub mode, operational state is in the `cron-state` branch. Job definitions
 remain in `main`.
@@ -375,6 +377,7 @@ PORT
 POLL_SECONDS
 MAX_CONCURRENCY
 DATA_DIR
+STATE_BACKEND
 SQLITE_PATH
 JOBS_DIR
 SCRIPTS_ROOT
@@ -443,7 +446,9 @@ are public. Use standalone mode for private jobs.
 
 **Can I add a PostgreSQL storage adapter later?**
 Yes. Storage is behind the state backend interface used by the ledger and
-history store. SQLite is one implementation.
+history store. SQLite is the only standalone backend enabled today; a future
+PostgreSQL backend can be added at the standalone backend factory without
+changing scheduler, ledger, history, or dashboard logic.
 
 **Can I add Slack, email, or Discord notifications?**
 Yes. Notifications are adapter-based. Add another notifier without changing the

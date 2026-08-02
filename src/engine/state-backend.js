@@ -3,7 +3,41 @@
 const fs = require("fs");
 const path = require("path");
 
+/**
+ * StateBackend contract.
+ *
+ * A state backend stores JSON-serializable documents addressed by logical names
+ * such as "state/cursors" or "history/job-a". Core engine modules depend only
+ * on this contract, not on files, SQLite, GitHub, or any future database.
+ *
+ * Required methods:
+ * - load(name, defaultValue): return the stored JSON value, or a clone of
+ *   defaultValue when no value exists.
+ * - save(name, data): persist a JSON-serializable value at name.
+ * - list(prefix): return stored logical names below prefix, without extensions.
+ * - delete(name): remove the value at name if it exists.
+ *
+ * Optional lifecycle/capability methods:
+ * - close(): release resources held by the backend.
+ * - exportToDirectory(targetDir): copy/export backend-owned durable state into
+ *   targetDir for backup.
+ * - restoreFromDirectory(sourceDir): restore backend-owned durable state from
+ *   sourceDir.
+ */
+const STATE_BACKEND_REQUIRED_METHODS = ["load", "save", "list", "delete"];
+
+function assertStateBackend(backend, label = "state backend") {
+  for (const method of STATE_BACKEND_REQUIRED_METHODS) {
+    if (!backend || typeof backend[method] !== "function") {
+      throw new TypeError(`${label} must implement ${method}()`);
+    }
+  }
+  return backend;
+}
+
 class JsonFileStateBackend {
+  static backendType = "json-file";
+
   constructor(baseDir) {
     this.baseDir = baseDir;
   }
@@ -48,6 +82,8 @@ class JsonFileStateBackend {
     const filePath = this.pathFor(name);
     if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
   }
+
+  close() {}
 }
 
-module.exports = { JsonFileStateBackend };
+module.exports = { JsonFileStateBackend, STATE_BACKEND_REQUIRED_METHODS, assertStateBackend };

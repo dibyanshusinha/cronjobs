@@ -1,5 +1,6 @@
 "use strict";
 
+const { assertStateBackend } = require("./state-backend");
 const { iso, parseIso } = require("./timeutil");
 
 const DEFAULT_LOOKBACK_MS = 15 * 60 * 1000;
@@ -8,7 +9,7 @@ const STALE_CLAIM_GRACE_MS = 10 * 60 * 1000;
 
 class Ledger {
   constructor(backend) {
-    this.backend = backend;
+    this.backend = assertStateBackend(backend, "Ledger backend");
     this.cursors = {};
     this.dedup = {};
     this.issues = {};
