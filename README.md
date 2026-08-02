@@ -141,25 +141,77 @@ on:
 
 Generated operational state is written to `cron-state`, not `main`.
 
+## Manual Dispatcher Runs
+
+The dispatcher normally runs automatically every 5 minutes. Run it manually
+when you want an immediate scan after changing jobs, dashboard code, or state.
+
+To run the dispatcher manually from GitHub:
+
+1. Open the repository on GitHub.
+2. Go to **Actions**.
+3. Select **Dispatch cron jobs**.
+4. Click **Run workflow**.
+5. Leave `job_id` empty to scan due jobs and refresh the dashboard.
+6. Set `job_id` only when you want to run one specific job immediately.
+7. Leave `force_disabled` unchecked unless you intentionally want to run a
+   disabled or auto-disabled job.
+
+Manual runs still write state, history, heartbeat, and dashboard updates to the
+`cron-state` branch.
+
 ## Standalone Deployment
 
 Use standalone mode for private jobs, private URLs, private scripts, and private
 execution history.
 
+1. Copy the example environment file:
+
 ```bash
 cp .env.example .env
 ```
 
-Edit `.env` and set a strong `DASHBOARD_PASSWORD` or `DASHBOARD_TOKEN`.
+2. Edit `.env` and set at least one authentication option:
+
+```text
+DASHBOARD_PASSWORD=change-this-long-random-password
+```
+
+or:
+
+```text
+DASHBOARD_TOKEN=change-this-long-random-token
+```
+
+3. Start the service:
 
 ```bash
 docker compose up -d --build
 ```
 
-Open:
+4. Check health:
+
+```bash
+curl http://127.0.0.1:8080/healthz
+curl http://127.0.0.1:8080/readyz
+```
+
+5. Open the dashboard:
 
 ```text
 http://127.0.0.1:8080/
+```
+
+6. View logs:
+
+```bash
+docker compose logs -f cron-dispatcher
+```
+
+7. Stop the service:
+
+```bash
+docker compose down
 ```
 
 The default Compose file binds the dashboard to loopback only. For remote
@@ -178,6 +230,26 @@ Do not commit private jobs, private scripts, `.env`, SQLite files, backups, or
 runtime data.
 
 More detail is in `docs/self-hosted.md`.
+
+## Example Jobs
+
+The included example jobs are disabled by default. They are safe templates for
+learning the job format without generating ongoing scheduled traffic.
+
+To enable an example, change:
+
+```yaml
+enabled: false
+```
+
+to:
+
+```yaml
+enabled: true
+```
+
+Then commit and push the change. The dispatcher will pick it up on the next
+scheduled run, or you can run the dispatcher manually for an immediate refresh.
 
 ## Job Defaults
 

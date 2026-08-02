@@ -23,20 +23,53 @@ changing scheduler, ledger, history, or dashboard code.
 
 ## Quick Start
 
+1. Copy the example environment file:
+
 ```bash
 cp .env.example .env
 ```
 
-Edit `.env` and set a strong `DASHBOARD_PASSWORD` or `DASHBOARD_TOKEN`.
+2. Edit `.env` and set at least one authentication option:
+
+```text
+DASHBOARD_PASSWORD=change-this-long-random-password
+```
+
+or:
+
+```text
+DASHBOARD_TOKEN=change-this-long-random-token
+```
+
+3. Start the service:
 
 ```bash
 docker compose up -d --build
 ```
 
-Open:
+4. Check health:
+
+```bash
+curl http://127.0.0.1:8080/healthz
+curl http://127.0.0.1:8080/readyz
+```
+
+5. Open the dashboard:
 
 ```text
 http://127.0.0.1:8080/
+```
+
+6. View logs:
+
+```bash
+docker compose logs -f cron-dispatcher
+```
+
+7. Stop the service:
+
+```bash
+docker compose down
 ```
 
 The default compose file binds only to `127.0.0.1`. Put it behind a reverse proxy with TLS if
