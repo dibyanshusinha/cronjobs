@@ -13,9 +13,17 @@ venv/
 # Kept here defensively for local testing and for the future self-hosted mode.
 .env
 .env.*
+!.env.example
 *.pem
 *.key
 
 # Local scratch state if you point STATE_DIR at the repo during manual testing.
 cron-state-checkout/
 .local-state/
+
+# Standalone runtime data, backups, and SQLite files stay local to a deployment.
+data/
+backups/
+*.sqlite
+*.sqlite-*
+*.db

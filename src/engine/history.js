@@ -1,11 +1,27 @@
 "use strict";
 
 const MAX_DETAIL_CHARS = 300;
+const SENSITIVE_KEY = /(SECRET|TOKEN|PASSWORD|PASS|KEY|AUTH|CREDENTIAL)/i;
+
+function sensitiveValues() {
+  return Object.entries(process.env)
+    .filter(([key, value]) => SENSITIVE_KEY.test(key) && typeof value === "string" && value.length >= 4)
+    .map(([, value]) => value)
+    .sort((a, b) => b.length - a.length);
+}
+
+function redactSensitive(text) {
+  let redacted = String(text || "");
+  for (const value of sensitiveValues()) {
+    redacted = redacted.split(value).join("[redacted]");
+  }
+  return redacted;
+}
 
 function sanitize(result) {
   return {
     ...result,
-    detail: (result.detail || "").slice(0, MAX_DETAIL_CHARS),
+    detail: redactSensitive(result.detail).slice(0, MAX_DETAIL_CHARS),
   };
 }
 

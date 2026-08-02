@@ -3,9 +3,12 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("fs");
+const http = require("http");
 const os = require("os");
 const path = require("path");
-const { resolveHeaders } = require("../src/engine/executors/http-executor");
+const { HistoryStore } = require("../src/engine/history");
+const { JsonFileStateBackend } = require("../src/engine/state-backend");
+const { execute: executeHttp, MAX_RESPONSE_BYTES, resolveHeaders } = require("../src/engine/executors/http-executor");
 const {
   ScriptSecurityError,
   resolveInterpreter,
@@ -86,4 +89,89 @@ test("resolveHeaders substitutes env var", () => {
 test("resolveHeaders missing env var becomes empty", () => {
   delete process.env.UNSET_VAR;
   assert.deepEqual(resolveHeaders({ Authorization: "${UNSET_VAR}" }), { Authorization: "" });
+});
+
+function httpServer(handler) {
+  const server = http.createServer(handler);
+  return new Promise((resolve) => {
+    server.listen(0, "127.0.0.1", () => resolve(server));
+  });
+}
+
+function serverUrl(server, pathName = "/") {
+  return `http://127.0.0.1:${server.address().port}${pathName}`;
+}
+
+test("http executor does not follow redirects", async () => {
+  const server = await httpServer((req, res) => {
+    res.writeHead(302, { Location: "/target" });
+    res.end("redirect");
+  });
+  try {
+    const result = await executeHttp("job", "2026-08-02T00:00:00.000Z", {
+      method: "GET",
+      url: serverUrl(server),
+      headers: {},
+      expected_status: [200],
+      timeout_seconds: 5,
+    });
+    assert.equal(result.ok, false);
+    assert.match(result.detail, /HTTP 302/);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
+test("http executor caps oversized response reads", async () => {
+  const tail = "needle-after-limit";
+  const server = await httpServer((req, res) => {
+    res.writeHead(200, { "Content-Type": "text/plain" });
+    res.end(`${"x".repeat(MAX_RESPONSE_BYTES + 1024)}${tail}`);
+  });
+  try {
+    const result = await executeHttp("job", "2026-08-02T00:00:00.000Z", {
+      method: "GET",
+      url: serverUrl(server),
+      headers: {},
+      expected_status: [200],
+      timeout_seconds: 5,
+      validate_contains: tail,
+    });
+    assert.equal(result.ok, false);
+    assert.match(result.detail, /validate_contains not found/);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
+test("history redacts sensitive output before persistence", () => {
+  const repo = makeRepo();
+  const oldSecret = process.env.API_TOKEN;
+  process.env.API_TOKEN = "super-secret-value";
+  try {
+    const backend = new JsonFileStateBackend(path.join(repo, "state"));
+    const history = new HistoryStore(backend);
+    history.append(
+      "job-a",
+      {
+        job_id: "job-a",
+        scheduled_time: "2026-08-02T00:00:00.000Z",
+        status: "failed",
+        started_at: "2026-08-02T00:00:00.000Z",
+        finished_at: "2026-08-02T00:00:01.000Z",
+        duration_ms: 1000,
+        attempts: 1,
+        detail: "script printed super-secret-value",
+        trigger: "scheduled",
+        run_url: null,
+      },
+      10
+    );
+    const data = backend.load("history/job-a", { runs: [] });
+    assert.equal(data.runs[0].detail.includes("super-secret-value"), false);
+    assert.equal(data.runs[0].detail.includes("[redacted]"), true);
+  } finally {
+    if (oldSecret === undefined) delete process.env.API_TOKEN;
+    else process.env.API_TOKEN = oldSecret;
+  }
 });
