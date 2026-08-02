@@ -155,7 +155,7 @@ main {
 
 .summary-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 12px;
   margin-bottom: 16px;
 }
@@ -731,6 +731,31 @@ code {
   margin-bottom: 14px;
 }
 
+.management-panel {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  padding: 12px;
+  margin-bottom: 14px;
+}
+
+.management-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.management-note {
+  color: var(--muted);
+  font-size: 12px;
+}
+
 .history-list {
   display: grid;
   gap: 8px;
@@ -824,6 +849,8 @@ footer {
   .job-main { grid-template-columns: 1fr; }
   .actions { justify-content: flex-start; }
   .detail-grid { grid-template-columns: 1fr; }
+  .management-panel { grid-template-columns: 1fr; }
+  .management-actions { justify-content: flex-start; }
   .history-item { grid-template-columns: 1fr; }
   footer { display: block; }
   footer a { display: inline-block; margin-top: 8px; }

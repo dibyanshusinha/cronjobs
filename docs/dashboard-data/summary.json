@@ -1,15 +1,16 @@
 {
-  "generated_at": "2026-08-02T03:59:53.982Z",
+  "generated_at": "2026-08-02T04:01:01.009Z",
   "heartbeat": {
-    "last_run_utc": "2026-08-02T03:59:53.982Z",
+    "last_run_utc": "2026-08-02T04:01:01.009Z",
     "status": "ok",
-    "detail": "0 executed, 0 skipped"
+    "detail": "1 executed, 0 skipped"
   },
   "jobs": [
     {
       "id": "example-backup-check",
       "name": "Example: backup check script",
       "type": "script",
+      "file_path": "/home/runner/work/cronjobs/cronjobs/jobs/examples/backup-check.job.yml",
       "enabled": true,
       "auto_disabled": false,
       "auto_disabled_reason": null,
@@ -58,6 +59,7 @@
       "id": "example-http-ping",
       "name": "Example: ping httpbin",
       "type": "http",
+      "file_path": "/home/runner/work/cronjobs/cronjobs/jobs/examples/ping-example.job.yml",
       "enabled": true,
       "auto_disabled": false,
       "auto_disabled_reason": null,
@@ -71,11 +73,11 @@
         "backoff_multiplier": 2,
         "max_backoff_seconds": 21600
       },
-      "last_evaluated_utc": "2026-08-02T03:46:16.744Z",
+      "last_evaluated_utc": "2026-08-02T04:01:02.856Z",
       "last_status": "success",
       "last_trigger": "scheduled",
       "consecutive_failures": 0,
-      "next_due_utc": "2026-08-02T04:00:00.000Z",
+      "next_due_utc": "2026-08-02T04:15:00.000Z",
       "open_issue": null,
       "recent_history": [
         {
@@ -339,12 +341,28 @@
           "detail": "HTTP 200",
           "trigger": "scheduled",
           "run_url": "https://github.com/dibyanshusinha/cronjobs/actions/runs/30731186676"
+        },
+        {
+          "job_id": "example-http-ping",
+          "scheduled_time": "2026-08-02T04:00:00.000Z",
+          "status": "success",
+          "started_at": "2026-08-02T04:01:02.508Z",
+          "finished_at": "2026-08-02T04:01:02.856Z",
+          "duration_ms": 348,
+          "attempts": 1,
+          "detail": "HTTP 200",
+          "trigger": "scheduled",
+          "run_url": "https://github.com/dibyanshusinha/cronjobs/actions/runs/30731610924"
         }
       ]
     }
   ],
   "meta": {
     "total_jobs": 2,
-    "failing_jobs": 0
+    "failing_jobs": 0,
+    "executions_24h": 9,
+    "success_rate_24h": 100,
+    "failures_24h": 0,
+    "avg_duration_ms_24h": 230
   }
 }

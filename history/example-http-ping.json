@@ -261,6 +261,18 @@
       "detail": "HTTP 200",
       "trigger": "scheduled",
       "run_url": "https://github.com/dibyanshusinha/cronjobs/actions/runs/30731186676"
+    },
+    {
+      "job_id": "example-http-ping",
+      "scheduled_time": "2026-08-02T04:00:00.000Z",
+      "status": "success",
+      "started_at": "2026-08-02T04:01:02.508Z",
+      "finished_at": "2026-08-02T04:01:02.856Z",
+      "duration_ms": 348,
+      "attempts": 1,
+      "detail": "HTTP 200",
+      "trigger": "scheduled",
+      "run_url": "https://github.com/dibyanshusinha/cronjobs/actions/runs/30731610924"
     }
   ]
 }

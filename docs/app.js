@@ -489,11 +489,15 @@ function renderSummary(data) {
   const failing = data.meta?.failing_jobs || 0;
   const disabled = (data.jobs || []).filter((job) => !job.enabled || job.auto_disabled).length;
   const paused = (data.jobs || []).filter((job) => effectiveStatus(job) === "paused").length;
+  const successRate = data.meta?.success_rate_24h === null || data.meta?.success_rate_24h === undefined ? "-" : `${data.meta.success_rate_24h}%`;
   document.getElementById("summary").innerHTML = [
     ["Total jobs", total],
     ["Failing", failing],
     ["Paused", paused],
     ["Disabled", disabled],
+    ["Runs 24h", data.meta?.executions_24h || 0],
+    ["Success 24h", successRate],
+    ["Avg duration", duration(data.meta?.avg_duration_ms_24h)],
   ]
     .map(([label, value]) => `
       <div class="metric">
@@ -502,6 +506,25 @@ function renderSummary(data) {
       </div>
     `)
     .join("");
+}
+
+async function copyJobToggleInstruction(job, nextEnabled) {
+  const path = job.file_path || `jobs/**/${job.id}.job.yml`;
+  const text = [
+    `Edit ${path}`,
+    "",
+    `Set this field:`,
+    `enabled: ${nextEnabled ? "true" : "false"}`,
+    "",
+    `Then run: npm run validate`,
+    `Commit and push. The dispatcher will use the new state on the next run.`,
+  ].join("\n");
+  try {
+    await navigator.clipboard.writeText(text);
+    return "Copied repo edit instructions.";
+  } catch (err) {
+    return text;
+  }
 }
 
 function renderHistory(job, index) {
@@ -594,6 +617,18 @@ function renderJobs(jobs) {
               <div><span class="field-label">Failure policy</span><span class="field-value">disable after ${escapeHtml(job.failure_policy?.auto_disable_after_consecutive_failures ?? 5)} failures<span class="detail">max backoff ${escapeHtml(job.failure_policy?.max_backoff_seconds ?? 21600)}s</span></span></div>
               <div><span class="field-label">History</span><span class="field-value">showing recent ${escapeHtml(job.recent_history?.length || 0)}<span class="detail">archives retained ${escapeHtml(job.history_retention_days || 365)} days</span></span></div>
             </div>
+            <div class="management-panel">
+              <div>
+                <span class="field-label">Job file</span>
+                <code>${escapeHtml(job.file_path || "Unknown job path")}</code>
+              </div>
+              <div class="management-actions">
+                <button type="button" class="secondary-action copy-toggle" data-job-index="${index}" data-next-enabled="${job.enabled ? "false" : "true"}">
+                  Copy ${job.enabled ? "disable" : "enable"} edit
+                </button>
+                <span class="management-note" data-toggle-note="${index}">Static dashboard: edit the YAML and push.</span>
+              </div>
+            </div>
             ${renderHistory(job, index)}
           </div>
         </article>
@@ -617,6 +652,15 @@ function renderJobs(jobs) {
       const index = button.dataset.historyTarget;
       const current = Number.parseInt(el.querySelector(`[data-history-current="${index}"]`)?.textContent || "1", 10) - 1;
       setHistoryPage(el, index, button.classList.contains("history-next") ? current + 1 : current - 1);
+    });
+  });
+
+  el.querySelectorAll(".copy-toggle").forEach((button) => {
+    button.addEventListener("click", async () => {
+      const index = Number.parseInt(button.dataset.jobIndex, 10);
+      const note = el.querySelector(`[data-toggle-note="${index}"]`);
+      const message = await copyJobToggleInstruction(jobs[index], button.dataset.nextEnabled === "true");
+      if (note) note.textContent = message;
     });
   });
 
