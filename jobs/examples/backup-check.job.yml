@@ -1,6 +1,7 @@
 id: example-backup-check
 name: "Example: backup check script"
-description: "Demonstrates a script job. Safe to delete once you add your own jobs."
+description: "Demonstrates a script job. Disabled by default; copy it when adding your own public jobs."
+enabled: false
 schedule: "0 3 * * *"
 timezone: "UTC"
 type: script

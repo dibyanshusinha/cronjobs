@@ -1,10 +1,11 @@
 id: example-http-ping
-name: "Example: ping httpbin"
-description: "Demonstrates an http job. Safe to delete once you add your own jobs."
+name: "Example: ping cronjobs dashboard"
+description: "Demonstrates an http job. Disabled by default; copy it when adding your own public jobs."
+enabled: false
 schedule: "*/15 * * * *"
 type: http
 http:
   method: GET
-  url: "https://httpbin.org/status/200"
+  url: "https://dibyanshusinha.github.io/cronjobs/"
   expected_status: [200]
   timeout_seconds: 10
