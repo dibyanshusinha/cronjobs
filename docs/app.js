@@ -1,6 +1,16 @@
 const DATA_URL = "dashboard-data/summary.json";
 const HEARTBEAT_STALE_AFTER_MINUTES = 15;
 const THEME_KEY = "cronjobs-theme";
+const HISTORY_PAGE_SIZE = 5;
+const WEEKDAYS = [
+  ["0", "Sun"],
+  ["1", "Mon"],
+  ["2", "Tue"],
+  ["3", "Wed"],
+  ["4", "Thu"],
+  ["5", "Fri"],
+  ["6", "Sat"],
+];
 
 function preferredTheme() {
   const stored = localStorage.getItem(THEME_KEY);
@@ -122,6 +132,38 @@ function parseStatusList(value) {
 function formData() {
   const form = document.getElementById("job-builder");
   return Object.fromEntries(new FormData(form).entries());
+}
+
+function skippedDays() {
+  return new Set(
+    [...document.querySelectorAll('input[name="skip_day"]:checked')].map((input) => input.value)
+  );
+}
+
+function composeSchedule(baseSchedule) {
+  const parts = String(baseSchedule || "").trim().split(/\s+/);
+  const skipped = skippedDays();
+  if (parts.length !== 5 || !skipped.size) return baseSchedule;
+  const allowed = WEEKDAYS.map(([value]) => value).filter((value) => !skipped.has(value));
+  if (!allowed.length) return baseSchedule;
+  return [...parts.slice(0, 4), allowed.join(",")].join(" ");
+}
+
+function updateScheduleSummary(schedule) {
+  const el = document.getElementById("schedule-summary");
+  if (!el) return;
+  const skipped = skippedDays();
+  if (!skipped.size) {
+    el.textContent = "Runs on every day selected by the cron expression.";
+    return;
+  }
+  const allowed = WEEKDAYS.filter(([value]) => !skipped.has(value)).map(([, label]) => label);
+  const skippedLabels = WEEKDAYS.filter(([value]) => skipped.has(value)).map(([, label]) => label);
+  if (!allowed.length) {
+    el.textContent = "At least one day must remain enabled. The cron expression was left unchanged.";
+    return;
+  }
+  el.textContent = `Runs on ${allowed.join(", ")}. Skips ${skippedLabels.join(", ")}. Cron: ${schedule}`;
 }
 
 function readHeaderRows() {
@@ -304,9 +346,13 @@ function updateBuilder() {
   document.getElementById("http-fields").hidden = data.type !== "http";
   document.getElementById("script-fields").hidden = data.type !== "script";
   if (data.preset && data.preset !== "custom") {
-    document.querySelector('[name="schedule"]').value = data.preset;
-    data.schedule = data.preset;
+    data.schedule = composeSchedule(data.preset);
+    document.querySelector('[name="schedule"]').value = data.schedule;
+  } else if (skippedDays().size) {
+    data.schedule = composeSchedule(data.schedule);
+    document.querySelector('[name="schedule"]').value = data.schedule;
   }
+  updateScheduleSummary(data.schedule);
   if (!document.querySelector('[name="timezone"]').value) {
     document.querySelector('[name="timezone"]').value = viewerTimeZone();
     data.timezone = viewerTimeZone();
@@ -457,14 +503,15 @@ function renderSummary(data) {
     .join("");
 }
 
-function renderHistory(job) {
+function renderHistory(job, index) {
   const history = (job.recent_history || []).slice().reverse();
   if (!history.length) return `<div class="empty-state">No recent history.</div>`;
+  const pageCount = Math.ceil(history.length / HISTORY_PAGE_SIZE);
   return `
-    <div class="history-list">
+    <div class="history-list" data-history-list="${index}">
       ${history
-        .map((run) => `
-          <div class="history-item">
+        .map((run, runIndex) => `
+          <div class="history-item" data-history-page="${Math.floor(runIndex / HISTORY_PAGE_SIZE)}">
             <div>${renderTime(run.finished_at || run.scheduled_time, job.timezone)}</div>
             <div>${badge(run.status)}</div>
             <div>${escapeHtml(duration(run.duration_ms))}</div>
@@ -477,7 +524,32 @@ function renderHistory(job) {
         `)
         .join("")}
     </div>
+    ${
+      pageCount > 1
+        ? `<div class="history-pager" data-history-pager="${index}">
+            <button type="button" class="secondary-action history-prev" data-history-target="${index}">Previous</button>
+            <span class="history-page-label">Page <span data-history-current="${index}">1</span> of ${pageCount}</span>
+            <button type="button" class="secondary-action history-next" data-history-target="${index}">Next</button>
+          </div>`
+        : ""
+    }
   `;
+}
+
+function setHistoryPage(root, index, page) {
+  const items = [...root.querySelectorAll(`[data-history-list="${index}"] .history-item`)];
+  if (!items.length) return;
+  const pageCount = Math.ceil(items.length / HISTORY_PAGE_SIZE);
+  const nextPage = Math.max(0, Math.min(page, pageCount - 1));
+  items.forEach((item) => {
+    item.hidden = Number.parseInt(item.dataset.historyPage, 10) !== nextPage;
+  });
+  const label = root.querySelector(`[data-history-current="${index}"]`);
+  if (label) label.textContent = String(nextPage + 1);
+  const prev = root.querySelector(`.history-prev[data-history-target="${index}"]`);
+  const next = root.querySelector(`.history-next[data-history-target="${index}"]`);
+  if (prev) prev.disabled = nextPage === 0;
+  if (next) next.disabled = nextPage >= pageCount - 1;
 }
 
 function renderJobs(jobs) {
@@ -521,7 +593,7 @@ function renderJobs(jobs) {
               <div><span class="field-label">Failure policy</span><span class="field-value">disable after ${escapeHtml(job.failure_policy?.auto_disable_after_consecutive_failures ?? 5)} failures<span class="detail">max backoff ${escapeHtml(job.failure_policy?.max_backoff_seconds ?? 21600)}s</span></span></div>
               <div><span class="field-label">History</span><span class="field-value">showing recent ${escapeHtml(job.recent_history?.length || 0)}<span class="detail">archives retained ${escapeHtml(job.history_retention_days || 365)} days</span></span></div>
             </div>
-            ${renderHistory(job)}
+            ${renderHistory(job, index)}
           </div>
         </article>
       `;
@@ -535,8 +607,19 @@ function renderJobs(jobs) {
       button.setAttribute("aria-expanded", String(!expanded));
       button.textContent = expanded ? "+" : "-";
       target.hidden = expanded;
+      if (!expanded) setHistoryPage(el, button.getAttribute("aria-controls").replace("job-details-", ""), 0);
     });
   });
+
+  el.querySelectorAll(".history-prev, .history-next").forEach((button) => {
+    button.addEventListener("click", () => {
+      const index = button.dataset.historyTarget;
+      const current = Number.parseInt(el.querySelector(`[data-history-current="${index}"]`)?.textContent || "1", 10) - 1;
+      setHistoryPage(el, index, button.classList.contains("history-next") ? current + 1 : current - 1);
+    });
+  });
+
+  jobs.forEach((_, index) => setHistoryPage(el, String(index), 0));
 }
 
 async function main() {

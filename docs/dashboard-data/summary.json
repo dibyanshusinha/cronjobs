@@ -1,9 +1,9 @@
 {
-  "generated_at": "2026-08-02T03:33:54.484Z",
+  "generated_at": "2026-08-02T03:46:15.133Z",
   "heartbeat": {
-    "last_run_utc": "2026-08-02T03:33:54.484Z",
+    "last_run_utc": "2026-08-02T03:46:15.133Z",
     "status": "ok",
-    "detail": "1 executed, 12 skipped"
+    "detail": "1 executed, 0 skipped"
   },
   "jobs": [
     {
@@ -71,13 +71,143 @@
         "backoff_multiplier": 2,
         "max_backoff_seconds": 21600
       },
-      "last_evaluated_utc": "2026-08-02T03:33:55.785Z",
+      "last_evaluated_utc": "2026-08-02T03:46:16.744Z",
       "last_status": "success",
       "last_trigger": "scheduled",
       "consecutive_failures": 0,
-      "next_due_utc": "2026-08-02T03:45:00.000Z",
+      "next_due_utc": "2026-08-02T04:00:00.000Z",
       "open_issue": null,
       "recent_history": [
+        {
+          "attempts": 1,
+          "detail": "HTTP 200",
+          "duration_ms": 47,
+          "finished_at": "2026-08-01T22:31:36.704949Z",
+          "job_id": "example-http-ping",
+          "scheduled_time": "2026-08-01T22:30:00Z",
+          "started_at": "2026-08-01T22:31:36.657488Z",
+          "status": "success"
+        },
+        {
+          "attempts": 0,
+          "detail": "skipped by misfire policy (a more recent occurrence ran instead)",
+          "duration_ms": null,
+          "finished_at": null,
+          "job_id": "example-http-ping",
+          "run_url": null,
+          "scheduled_time": "2026-08-01T22:45:00Z",
+          "started_at": null,
+          "status": "skipped",
+          "trigger": "scheduled"
+        },
+        {
+          "attempts": 0,
+          "detail": "skipped by misfire policy (a more recent occurrence ran instead)",
+          "duration_ms": null,
+          "finished_at": null,
+          "job_id": "example-http-ping",
+          "run_url": null,
+          "scheduled_time": "2026-08-01T23:00:00Z",
+          "started_at": null,
+          "status": "skipped",
+          "trigger": "scheduled"
+        },
+        {
+          "attempts": 1,
+          "detail": "HTTP 200",
+          "duration_ms": 21,
+          "finished_at": "2026-08-01T23:16:01.554957Z",
+          "job_id": "example-http-ping",
+          "run_url": "https://github.com/dibyanshusinha/cronjobs/actions/runs/30722974090",
+          "scheduled_time": "2026-08-01T23:15:00Z",
+          "started_at": "2026-08-01T23:16:01.533794Z",
+          "status": "success",
+          "trigger": "scheduled"
+        },
+        {
+          "job_id": "example-http-ping",
+          "scheduled_time": "2026-08-01T23:30:00.000Z",
+          "status": "skipped",
+          "started_at": null,
+          "finished_at": null,
+          "duration_ms": null,
+          "attempts": 0,
+          "detail": "skipped by misfire policy (a more recent occurrence ran instead)",
+          "trigger": "scheduled",
+          "run_url": null
+        },
+        {
+          "job_id": "example-http-ping",
+          "scheduled_time": "2026-08-01T23:45:00.000Z",
+          "status": "success",
+          "started_at": "2026-08-01T23:54:01.318Z",
+          "finished_at": "2026-08-01T23:54:01.782Z",
+          "duration_ms": 464,
+          "attempts": 1,
+          "detail": "HTTP 200",
+          "trigger": "scheduled",
+          "run_url": "https://github.com/dibyanshusinha/cronjobs/actions/runs/30724201235"
+        },
+        {
+          "job_id": "example-http-ping",
+          "scheduled_time": "2026-08-02T00:00:00.000Z",
+          "status": "skipped",
+          "started_at": null,
+          "finished_at": null,
+          "duration_ms": null,
+          "attempts": 0,
+          "detail": "skipped by misfire policy (a more recent occurrence ran instead)",
+          "trigger": "scheduled",
+          "run_url": null
+        },
+        {
+          "job_id": "example-http-ping",
+          "scheduled_time": "2026-08-02T00:15:00.000Z",
+          "status": "success",
+          "started_at": "2026-08-02T00:16:35.669Z",
+          "finished_at": "2026-08-02T00:16:35.855Z",
+          "duration_ms": 186,
+          "attempts": 1,
+          "detail": "HTTP 200",
+          "trigger": "scheduled",
+          "run_url": "https://github.com/dibyanshusinha/cronjobs/actions/runs/30724900722"
+        },
+        {
+          "job_id": "example-http-ping",
+          "scheduled_time": "2026-08-02T00:30:00.000Z",
+          "status": "skipped",
+          "started_at": null,
+          "finished_at": null,
+          "duration_ms": null,
+          "attempts": 0,
+          "detail": "skipped by misfire policy (a more recent occurrence ran instead)",
+          "trigger": "scheduled",
+          "run_url": null
+        },
+        {
+          "job_id": "example-http-ping",
+          "scheduled_time": "2026-08-02T00:45:00.000Z",
+          "status": "skipped",
+          "started_at": null,
+          "finished_at": null,
+          "duration_ms": null,
+          "attempts": 0,
+          "detail": "skipped by misfire policy (a more recent occurrence ran instead)",
+          "trigger": "scheduled",
+          "run_url": null
+        },
+        {
+          "job_id": "example-http-ping",
+          "scheduled_time": "2026-08-02T01:00:00.000Z",
+          "status": "skipped",
+          "started_at": null,
+          "finished_at": null,
+          "duration_ms": null,
+          "attempts": 0,
+          "detail": "skipped by misfire policy (a more recent occurrence ran instead)",
+          "trigger": "scheduled",
+          "run_url": null
+        },
         {
           "job_id": "example-http-ping",
           "scheduled_time": "2026-08-02T01:15:00.000Z",
@@ -197,6 +327,18 @@
           "detail": "HTTP 200",
           "trigger": "scheduled",
           "run_url": "https://github.com/dibyanshusinha/cronjobs/actions/runs/30730834969"
+        },
+        {
+          "job_id": "example-http-ping",
+          "scheduled_time": "2026-08-02T03:45:00.000Z",
+          "status": "success",
+          "started_at": "2026-08-02T03:46:16.135Z",
+          "finished_at": "2026-08-02T03:46:16.744Z",
+          "duration_ms": 609,
+          "attempts": 1,
+          "detail": "HTTP 200",
+          "trigger": "scheduled",
+          "run_url": "https://github.com/dibyanshusinha/cronjobs/actions/runs/30731186676"
         }
       ]
     }
