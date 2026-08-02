@@ -1,9 +1,9 @@
 {
-  "generated_at": "2026-08-02T12:45:37.512Z",
+  "generated_at": "2026-08-02T14:17:58.630Z",
   "heartbeat": {
-    "last_run_utc": "2026-08-02T12:45:37.512Z",
+    "last_run_utc": "2026-08-02T14:17:58.630Z",
     "status": "ok",
-    "detail": "1 executed, 3 skipped"
+    "detail": "1 executed, 5 skipped"
   },
   "jobs": [
     {
@@ -24,11 +24,11 @@
         "backoff_multiplier": 2,
         "max_backoff_seconds": 21600
       },
-      "last_evaluated_utc": "2026-08-02T12:45:38.471Z",
+      "last_evaluated_utc": "2026-08-02T14:17:59.607Z",
       "last_status": "success",
       "last_trigger": "scheduled",
       "consecutive_failures": 0,
-      "next_due_utc": "2026-08-02T13:00:00.000Z",
+      "next_due_utc": "2026-08-02T14:30:00.000Z",
       "open_issue": null,
       "recent_history": [
         {
@@ -294,6 +294,78 @@
           "detail": "HTTP 200",
           "trigger": "scheduled",
           "run_url": "https://github.com/dibyanshusinha/cronjobs/actions/runs/30748492785"
+        },
+        {
+          "job_id": "cronjobs-dashboard-self-check",
+          "scheduled_time": "2026-08-02T13:00:00.000Z",
+          "status": "skipped",
+          "started_at": null,
+          "finished_at": null,
+          "duration_ms": null,
+          "attempts": 0,
+          "detail": "skipped by misfire policy (a more recent occurrence ran instead)",
+          "trigger": "scheduled",
+          "run_url": null
+        },
+        {
+          "job_id": "cronjobs-dashboard-self-check",
+          "scheduled_time": "2026-08-02T13:15:00.000Z",
+          "status": "skipped",
+          "started_at": null,
+          "finished_at": null,
+          "duration_ms": null,
+          "attempts": 0,
+          "detail": "skipped by misfire policy (a more recent occurrence ran instead)",
+          "trigger": "scheduled",
+          "run_url": null
+        },
+        {
+          "job_id": "cronjobs-dashboard-self-check",
+          "scheduled_time": "2026-08-02T13:30:00.000Z",
+          "status": "skipped",
+          "started_at": null,
+          "finished_at": null,
+          "duration_ms": null,
+          "attempts": 0,
+          "detail": "skipped by misfire policy (a more recent occurrence ran instead)",
+          "trigger": "scheduled",
+          "run_url": null
+        },
+        {
+          "job_id": "cronjobs-dashboard-self-check",
+          "scheduled_time": "2026-08-02T13:45:00.000Z",
+          "status": "skipped",
+          "started_at": null,
+          "finished_at": null,
+          "duration_ms": null,
+          "attempts": 0,
+          "detail": "skipped by misfire policy (a more recent occurrence ran instead)",
+          "trigger": "scheduled",
+          "run_url": null
+        },
+        {
+          "job_id": "cronjobs-dashboard-self-check",
+          "scheduled_time": "2026-08-02T14:00:00.000Z",
+          "status": "skipped",
+          "started_at": null,
+          "finished_at": null,
+          "duration_ms": null,
+          "attempts": 0,
+          "detail": "skipped by misfire policy (a more recent occurrence ran instead)",
+          "trigger": "scheduled",
+          "run_url": null
+        },
+        {
+          "job_id": "cronjobs-dashboard-self-check",
+          "scheduled_time": "2026-08-02T14:15:00.000Z",
+          "status": "success",
+          "started_at": "2026-08-02T14:17:59.491Z",
+          "finished_at": "2026-08-02T14:17:59.607Z",
+          "duration_ms": 116,
+          "attempts": 1,
+          "detail": "HTTP 200",
+          "trigger": "scheduled",
+          "run_url": "https://github.com/dibyanshusinha/cronjobs/actions/runs/30751784487"
         }
       ]
     },
@@ -368,7 +440,7 @@
       "last_status": "failed",
       "last_trigger": "scheduled",
       "consecutive_failures": 1,
-      "next_due_utc": "2026-08-02T13:00:00.000Z",
+      "next_due_utc": "2026-08-02T14:30:00.000Z",
       "open_issue": 1,
       "recent_history": [
         {
@@ -771,9 +843,9 @@
   "meta": {
     "total_jobs": 3,
     "failing_jobs": 1,
-    "executions_24h": 19,
+    "executions_24h": 20,
     "success_rate_24h": 95,
     "failures_24h": 1,
-    "avg_duration_ms_24h": 5744
+    "avg_duration_ms_24h": 5462
   }
 }
