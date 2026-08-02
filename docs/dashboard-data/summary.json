@@ -1,16 +1,16 @@
 {
-  "generated_at": "2026-08-02T04:01:01.009Z",
+  "generated_at": "2026-08-02T04:04:19.272Z",
   "heartbeat": {
-    "last_run_utc": "2026-08-02T04:01:01.009Z",
+    "last_run_utc": "2026-08-02T04:04:19.272Z",
     "status": "ok",
-    "detail": "1 executed, 0 skipped"
+    "detail": "0 executed, 0 skipped"
   },
   "jobs": [
     {
       "id": "example-backup-check",
       "name": "Example: backup check script",
       "type": "script",
-      "file_path": "/home/runner/work/cronjobs/cronjobs/jobs/examples/backup-check.job.yml",
+      "file_path": "jobs/examples/backup-check.job.yml",
       "enabled": true,
       "auto_disabled": false,
       "auto_disabled_reason": null,
@@ -59,7 +59,7 @@
       "id": "example-http-ping",
       "name": "Example: ping httpbin",
       "type": "http",
-      "file_path": "/home/runner/work/cronjobs/cronjobs/jobs/examples/ping-example.job.yml",
+      "file_path": "jobs/examples/ping-example.job.yml",
       "enabled": true,
       "auto_disabled": false,
       "auto_disabled_reason": null,
