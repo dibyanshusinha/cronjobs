@@ -215,6 +215,7 @@ function buildJobYaml(data) {
     `timezone: ${yamlString(data.timezone || viewerTimeZone())}`,
     `type: ${data.type}`,
     `retries: ${Number.parseInt(data.retries || "0", 10)}`,
+    `timeout_seconds: ${Number.parseInt(data.timeout || "30", 10)}`,
     `history_retention_days: ${Number.parseInt(data.retention || "365", 10)}`,
     `failure_policy:`,
     `  auto_disable_after_consecutive_failures: ${Number.parseInt(data.auto_disable || "5", 10)}`,

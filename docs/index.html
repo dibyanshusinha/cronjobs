@@ -133,12 +133,15 @@
             <summary>Advanced safeguards</summary>
             <div class="form-row three">
               <label>Retries<input name="retries" type="number" min="0" max="20" value="2" /></label>
+              <label>Job timeout seconds<input name="timeout" type="number" min="1" max="590" value="30" /></label>
               <label>Auto-disable after failures<input name="auto_disable" type="number" min="1" max="100" value="5" /></label>
-              <label>History retention days<input name="retention" type="number" min="1" max="3650" value="365" /></label>
             </div>
             <div class="form-row three">
+              <label>History retention days<input name="retention" type="number" min="1" max="3650" value="365" /></label>
               <label>Initial backoff seconds<input name="initial_backoff" type="number" min="0" max="86400" value="300" /></label>
               <label>Backoff multiplier<input name="backoff_multiplier" type="number" min="1" max="10" step="0.1" value="2" /></label>
+            </div>
+            <div class="form-row three">
               <label>Max backoff seconds<input name="max_backoff" type="number" min="0" max="604800" value="21600" /></label>
             </div>
           </details>
