@@ -80,6 +80,23 @@ function formatTime(isoStr, timeZone) {
   }
 }
 
+function formatAxisTime(isoStr, timeZone) {
+  if (!isoStr) return "";
+  const date = new Date(isoStr);
+  if (Number.isNaN(date.getTime())) return "";
+  try {
+    return new Intl.DateTimeFormat("en-US", {
+      timeZone,
+      month: "short",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(date);
+  } catch (e) {
+    return "";
+  }
+}
+
 function renderTime(isoStr, jobTz) {
   if (!isoStr) return `<span class="time-secondary">Never</span>`;
   const localTz = viewerTimeZone();
@@ -651,33 +668,73 @@ function renderJobStatsStrip(job) {
   `;
 }
 
+function renderJobRowStats(job) {
+  const stats = jobStats(job);
+  return `
+    <div class="job-row-stats" aria-label="Recent run statistics">
+      <div><span class="field-label">Runs</span><strong>${stats.total}</strong></div>
+      <div><span class="field-label">Success</span><strong>${stats.successRate === null ? "-" : `${stats.successRate}%`}</strong></div>
+      <div><span class="field-label">Failures</span><strong>${stats.failed}</strong></div>
+      <div><span class="field-label">Avg</span><strong>${escapeHtml(duration(stats.avgDuration))}</strong></div>
+    </div>
+  `;
+}
+
 function renderJobDurationChart(job) {
   const runs = (job.recent_history || [])
     .filter((run) => run.status !== "skipped")
+    .filter((run) => runTimestamp(run))
+    .sort((a, b) => runTimestamp(a).getTime() - runTimestamp(b).getTime())
     .slice(-20);
   if (!runs.length) return `<div class="empty-state compact">No completed runs to chart yet.</div>`;
   const durations = runs.map((run) => Number.isFinite(run.duration_ms) ? Math.max(0, run.duration_ms) : 0);
   const max = Math.max(1, ...durations);
   const width = 640;
-  const height = 164;
-  const padX = 18;
-  const padY = 18;
-  const step = runs.length > 1 ? (width - padX * 2) / (runs.length - 1) : 0;
+  const height = 190;
+  const padLeft = 58;
+  const padRight = 22;
+  const padTop = 16;
+  const padBottom = 34;
+  const plotWidth = width - padLeft - padRight;
+  const plotHeight = height - padTop - padBottom;
+  const timestamps = runs.map((run) => runTimestamp(run).getTime());
+  const minTime = Math.min(...timestamps);
+  const maxTime = Math.max(...timestamps);
+  const timeSpan = Math.max(1, maxTime - minTime);
+  const yForValue = (value) => padTop + plotHeight - (value / max) * plotHeight;
+  const xForTime = (stamp) => runs.length > 1 ? padLeft + ((stamp - minTime) / timeSpan) * plotWidth : padLeft + plotWidth / 2;
   const points = durations.map((value, index) => {
-    const x = runs.length > 1 ? padX + index * step : width / 2;
-    const y = height - padY - (value / max) * (height - padY * 2);
+    const x = xForTime(timestamps[index]);
+    const y = yForValue(value);
     return { x, y, value, run: runs[index] };
   });
+  const yTickValues = [...new Set([max, Math.round(max / 2), 0])];
+  const yTicks = yTickValues.map((value) => ({ value, y: yForValue(value) }));
+  const xTicks = [
+    { stamp: minTime, x: padLeft, anchor: "start" },
+    ...(runs.length > 2 ? [{ stamp: minTime + timeSpan / 2, x: padLeft + plotWidth / 2, anchor: "middle" }] : []),
+    { stamp: maxTime, x: padLeft + plotWidth, anchor: "end" },
+  ];
   const path = points
     .map((point, index) => `${index === 0 ? "M" : "L"} ${point.x.toFixed(1)} ${point.y.toFixed(1)}`)
     .join(" ");
-  const areaPath = `${path} L ${points[points.length - 1].x.toFixed(1)} ${height - padY} L ${points[0].x.toFixed(1)} ${height - padY} Z`;
+  const areaBaseline = padTop + plotHeight;
+  const areaPath = `${path} L ${points[points.length - 1].x.toFixed(1)} ${areaBaseline} L ${points[0].x.toFixed(1)} ${areaBaseline} Z`;
   return `
     <div class="duration-line-chart" data-duration-chart>
-      <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Recent duration line chart">
-        <line class="duration-grid" x1="${padX}" y1="${padY}" x2="${width - padX}" y2="${padY}"></line>
-        <line class="duration-grid" x1="${padX}" y1="${height / 2}" x2="${width - padX}" y2="${height / 2}"></line>
-        <line class="duration-grid" x1="${padX}" y1="${height - padY}" x2="${width - padX}" y2="${height - padY}"></line>
+      <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Duration in milliseconds by event time">
+        ${yTicks
+          .map((tick) => `
+            <line class="duration-grid" x1="${padLeft}" y1="${tick.y.toFixed(1)}" x2="${width - padRight}" y2="${tick.y.toFixed(1)}"></line>
+            <text class="axis-label y-axis-label" x="${padLeft - 8}" y="${tick.y.toFixed(1)}" text-anchor="end" dominant-baseline="middle">${escapeHtml(duration(tick.value))}</text>
+          `)
+          .join("")}
+        <line class="axis-line" x1="${padLeft}" y1="${areaBaseline}" x2="${width - padRight}" y2="${areaBaseline}"></line>
+        ${xTicks
+          .map((tick) => `
+            <text class="axis-label x-axis-label" x="${tick.x.toFixed(1)}" y="${height - 8}" text-anchor="${tick.anchor}">${escapeHtml(formatAxisTime(new Date(tick.stamp).toISOString(), job.timezone || viewerTimeZone()))}</text>
+          `)
+          .join("")}
         <path class="duration-area" d="${areaPath}"></path>
         <path class="duration-line" d="${path}"></path>
         ${points
@@ -693,11 +750,6 @@ function renderJobDurationChart(job) {
           `)
           .join("")}
       </svg>
-      <div class="chart-scale">
-        <span>0 ms</span>
-        <span>${escapeHtml(duration(Math.round(max / 2)))}</span>
-        <span>${escapeHtml(duration(max))}</span>
-      </div>
       <div class="duration-tooltip" data-duration-tooltip>Hover a point for exact duration.</div>
     </div>
   `;
@@ -960,7 +1012,7 @@ function renderJobs(jobs) {
             </div>
             <div>
               <span class="field-label">Recent</span>
-              ${renderJobStatsStrip(job)}
+              ${renderJobRowStats(job)}
             </div>
           </button>
           <div id="${detailsId}" ${expanded ? "" : "hidden"}>

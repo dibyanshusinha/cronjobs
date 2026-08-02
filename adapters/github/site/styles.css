@@ -788,10 +788,10 @@ legend {
 
 .job-main {
   display: grid;
-  grid-template-columns: minmax(210px, 1.25fr) minmax(110px, 0.65fr) minmax(170px, 1fr) minmax(170px, 1fr) minmax(190px, 1fr) auto;
-  gap: 14px;
+  grid-template-columns: minmax(220px, 1.35fr) minmax(110px, 0.55fr) minmax(190px, 1fr) minmax(190px, 1fr) minmax(250px, 1.05fr);
+  gap: 18px;
   align-items: center;
-  padding: 16px;
+  padding: 18px 16px;
 }
 
 .job-select {
@@ -926,7 +926,7 @@ code {
 
 .section-head {
   display: flex;
-  align-items: center;
+  align-items: end;
   justify-content: space-between;
   gap: 16px;
   margin: 6px 0 12px;
@@ -943,12 +943,18 @@ code {
   align-items: center;
   justify-content: flex-end;
   gap: 10px;
-  flex-wrap: wrap;
+  flex: 0 0 auto;
+  flex-wrap: nowrap;
 }
 
 .filter-field {
-  width: min(360px, 100%);
+  width: min(380px, 34vw);
   margin: 0;
+}
+
+.filter-field input {
+  min-height: 42px;
+  margin-top: 0;
 }
 
 .sr-only {
@@ -972,6 +978,20 @@ code {
   display: grid;
   grid-template-columns: repeat(4, minmax(54px, 1fr));
   gap: 8px;
+}
+
+.job-row-stats {
+  display: grid;
+  grid-template-columns: 46px 64px 58px 62px;
+  gap: 12px;
+  align-items: start;
+}
+
+.job-row-stats strong {
+  display: block;
+  color: var(--fg);
+  font-size: 15px;
+  line-height: 1.15;
 }
 
 .job-stats-strip strong {
@@ -1005,7 +1025,7 @@ code {
 .duration-line-chart svg {
   display: block;
   width: 100%;
-  height: 164px;
+  height: 190px;
   overflow: visible;
 }
 
@@ -1013,6 +1033,19 @@ code {
   stroke: color-mix(in srgb, var(--border), transparent 15%);
   stroke-width: 1;
   vector-effect: non-scaling-stroke;
+}
+
+.axis-line {
+  stroke: color-mix(in srgb, var(--border), transparent 6%);
+  stroke-width: 1.2;
+  vector-effect: non-scaling-stroke;
+}
+
+.axis-label {
+  fill: var(--muted);
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0;
 }
 
 .duration-area {
@@ -1047,13 +1080,6 @@ code {
 .duration-point.success { stroke: var(--ok); }
 .duration-point.skipped,
 .duration-point.paused { stroke: var(--warn); }
-
-.chart-scale {
-  display: flex;
-  justify-content: space-between;
-  color: var(--muted);
-  font-size: 11px;
-}
 
 .duration-tooltip {
   color: var(--muted);
