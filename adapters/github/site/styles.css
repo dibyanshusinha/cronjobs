@@ -76,13 +76,15 @@ h1 {
 
 .top-actions {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 10px;
   flex: 1;
   justify-content: flex-end;
 }
 
 .icon-button {
+  display: inline-grid;
+  place-items: center;
   width: 38px;
   height: 38px;
   border: 1px solid var(--border);
@@ -92,6 +94,7 @@ h1 {
   cursor: pointer;
   font-size: 18px;
   line-height: 1;
+  padding: 0;
 }
 
 .icon-button:hover {
@@ -325,6 +328,44 @@ legend {
   gap: 8px;
 }
 
+.day-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.day-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  margin: 0;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--fg);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.day-pill:has(input:checked) {
+  border-color: var(--warn);
+  color: var(--warn);
+}
+
+.day-pill input {
+  width: auto;
+  margin: 0;
+}
+
+.help-inline {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
 .header-empty {
   color: var(--muted);
   font-size: 13px;
@@ -392,6 +433,11 @@ legend {
   min-height: 32px;
 }
 
+.copy-action {
+  width: 100%;
+  margin: 10px 0 14px;
+}
+
 .secondary-action:disabled {
   cursor: not-allowed;
   opacity: 0.55;
@@ -402,7 +448,7 @@ legend {
 }
 
 #job-path,
-#yaml-output {
+.yaml-preview {
   display: block;
   overflow-x: auto;
   border: 1px solid var(--border);
@@ -412,10 +458,17 @@ legend {
 }
 
 #yaml-output {
-  min-height: 260px;
-  margin: 5px 0 0;
+  max-height: 320px;
+  margin: 10px 0 0;
+  overflow: auto;
   white-space: pre;
   font-size: 12px;
+}
+
+.yaml-preview summary {
+  cursor: pointer;
+  color: var(--fg);
+  font-weight: 700;
 }
 
 .help-text {
@@ -565,6 +618,23 @@ code {
   border-radius: 8px;
   background: var(--surface);
   padding: 10px;
+  font-size: 13px;
+}
+
+.history-item[hidden] {
+  display: none;
+}
+
+.history-pager {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.history-page-label {
+  color: var(--muted);
   font-size: 13px;
 }
 

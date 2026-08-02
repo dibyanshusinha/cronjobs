@@ -63,6 +63,19 @@
               </select>
             </label>
           </div>
+          <fieldset class="schedule-editor">
+            <legend>Skip days</legend>
+            <div class="day-pills" aria-label="Days to skip">
+              <label class="day-pill"><input type="checkbox" name="skip_day" value="1" /> Mon</label>
+              <label class="day-pill"><input type="checkbox" name="skip_day" value="2" /> Tue</label>
+              <label class="day-pill"><input type="checkbox" name="skip_day" value="3" /> Wed</label>
+              <label class="day-pill"><input type="checkbox" name="skip_day" value="4" /> Thu</label>
+              <label class="day-pill"><input type="checkbox" name="skip_day" value="5" /> Fri</label>
+              <label class="day-pill"><input type="checkbox" name="skip_day" value="6" /> Sat</label>
+              <label class="day-pill"><input type="checkbox" name="skip_day" value="0" /> Sun</label>
+            </div>
+            <p id="schedule-summary" class="help-inline">Runs on every day selected by the cron expression.</p>
+          </fieldset>
           <label>Cron expression<input name="schedule" value="*/15 * * * *" /></label>
 
           <div id="http-fields" class="type-fields">
@@ -121,7 +134,6 @@
           <div class="button-row">
             <button type="button" id="simulate-job" class="primary-action">Simulate schedule</button>
             <button type="button" id="test-job" class="secondary-action">Test HTTP</button>
-            <button type="button" id="copy-yaml" class="secondary-action">Copy YAML</button>
           </div>
         </form>
 
@@ -130,13 +142,16 @@
             <span class="field-label">Create this file</span>
             <code id="job-path">jobs/examples/my-public-job.job.yml</code>
           </div>
-          <div class="output-block">
-            <span class="field-label">Job YAML</span>
-            <pre id="yaml-output"></pre>
-          </div>
+          <button type="button" id="copy-yaml" class="primary-action copy-action">Copy YAML</button>
           <div class="output-block">
             <span class="field-label">Next runs</span>
             <div id="schedule-output" class="help-text">No simulation yet.</div>
+          </div>
+          <div class="output-block">
+            <details class="yaml-preview">
+              <summary>Preview YAML</summary>
+              <pre id="yaml-output"></pre>
+            </details>
           </div>
           <div class="output-block">
             <span class="field-label">Test result</span>

@@ -109,10 +109,12 @@ Nested folders are supported and are only for organization.
 
 The dashboard includes a **Create job** helper. It opens as a focused dialog so
 the monitoring view stays clean. It lets you fill out the fields, add HTTP
-headers, generate copy-ready YAML, simulate upcoming run times, and test a
-public HTTP request directly from your browser after an explicit confirmation.
-That browser test is useful when you want the receiving service to see your
-current browser/network IP instead of a GitHub Actions runner IP.
+headers, skip selected weekdays, generate copy-ready YAML, simulate upcoming run
+times, and test a public HTTP request directly from your browser after an
+explicit confirmation. The YAML stays collapsed behind a preview because the
+normal path is to use the copy button. The browser test is useful when you want
+the receiving service to see your current browser/network IP instead of a GitHub
+Actions runner IP.
 
 Scheduled jobs still run from GitHub Actions, so production executions will
 come from GitHub-hosted runner infrastructure unless you later move the job to a
@@ -199,6 +201,14 @@ Manual runs can still be used to test recovery. If a job is auto-disabled, use
 auto-disable state.
 
 The dashboard shows `paused` and `disabled` states separately.
+
+## History display and cleanup
+
+Recent history is shown inside each expandable job card with pagination so long
+failure or skip streaks do not overwhelm the page. The dashboard summary
+publishes a capped recent slice per job, while full archived history continues
+to be stored under `history/archive/YYYY-MM/` on the `cron-state` branch.
+Archive cleanup follows each job's `history_retention_days` setting.
 
 ## Script jobs
 

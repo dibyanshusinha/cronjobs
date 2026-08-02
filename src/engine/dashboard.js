@@ -19,7 +19,7 @@ function buildSummary(jobs, ledger, history, now) {
         nextDue = null;
       }
 
-      const recent = history.recent(job.id, 10);
+      const recent = history.recent(job.id, Math.min(job.history_limit || 50, 50));
       const lastReal = [...recent].reverse().find((run) => run.status !== "skipped") || null;
       const lastRunAt = cursor.last_run_utc || (lastReal ? lastReal.finished_at : cursor.last_evaluated_utc);
       const lastStatus = cursor.last_status || (lastReal ? lastReal.status : null);
