@@ -107,11 +107,12 @@ http:
 
 Nested folders are supported and are only for organization.
 
-The dashboard includes a **Create a New Job** helper. It lets you fill out the
-fields, generate copy-ready YAML, simulate upcoming run times, and test a public
-HTTP request directly from your browser. That browser test is useful when you
-want the receiving service to see your current browser/network IP instead of a
-GitHub Actions runner IP.
+The dashboard includes a **Create job** helper. It opens as a focused dialog so
+the monitoring view stays clean. It lets you fill out the fields, add HTTP
+headers, generate copy-ready YAML, simulate upcoming run times, and test a
+public HTTP request directly from your browser after an explicit confirmation.
+That browser test is useful when you want the receiving service to see your
+current browser/network IP instead of a GitHub Actions runner IP.
 
 Scheduled jobs still run from GitHub Actions, so production executions will
 come from GitHub-hosted runner infrastructure unless you later move the job to a

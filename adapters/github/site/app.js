@@ -119,21 +119,48 @@ function parseStatusList(value) {
     .filter((num) => Number.isInteger(num) && num >= 100 && num <= 599);
 }
 
-function parseHeaders(value) {
-  const headers = [];
-  for (const line of String(value || "").split(/\r?\n/)) {
-    const trimmed = line.trim();
-    if (!trimmed) continue;
-    const idx = trimmed.indexOf(":");
-    if (idx <= 0) continue;
-    headers.push([trimmed.slice(0, idx).trim(), trimmed.slice(idx + 1).trim()]);
-  }
-  return headers;
-}
-
 function formData() {
   const form = document.getElementById("job-builder");
   return Object.fromEntries(new FormData(form).entries());
+}
+
+function readHeaderRows() {
+  return [...document.querySelectorAll("#headers-list .header-row")]
+    .map((row) => {
+      const key = row.querySelector(".header-name")?.value.trim() || "";
+      const value = row.querySelector(".header-value")?.value.trim() || "";
+      return key ? [key, value] : null;
+    })
+    .filter(Boolean);
+}
+
+function updateHeaderEmptyState() {
+  const list = document.getElementById("headers-list");
+  if (!list) return;
+  const empty = list.querySelector(".header-empty");
+  const hasRows = Boolean(list.querySelector(".header-row"));
+  if (empty) empty.hidden = hasRows;
+}
+
+function addHeaderRow(key = "", value = "") {
+  const list = document.getElementById("headers-list");
+  if (!list) return;
+  const row = document.createElement("div");
+  row.className = "header-row";
+  row.innerHTML = `
+    <label>Header name<input class="header-name" value="${escapeHtml(key)}" placeholder="Authorization" /></label>
+    <label>Value<input class="header-value" value="${escapeHtml(value)}" placeholder="\${MY_SECRET}" /></label>
+    <button type="button" class="icon-button remove-header" title="Remove header" aria-label="Remove header">×</button>
+  `;
+  row.querySelectorAll("input").forEach((input) => input.addEventListener("input", updateBuilder));
+  row.querySelector(".remove-header").addEventListener("click", () => {
+    row.remove();
+    updateHeaderEmptyState();
+    updateBuilder();
+  });
+  list.appendChild(row);
+  updateHeaderEmptyState();
+  updateBuilder();
 }
 
 function buildJobYaml(data) {
@@ -149,9 +176,9 @@ function buildJobYaml(data) {
     `history_retention_days: ${Number.parseInt(data.retention || "365", 10)}`,
     `failure_policy:`,
     `  auto_disable_after_consecutive_failures: ${Number.parseInt(data.auto_disable || "5", 10)}`,
-    `  initial_backoff_seconds: 300`,
-    `  backoff_multiplier: 2`,
-    `  max_backoff_seconds: 21600`,
+    `  initial_backoff_seconds: ${Number.parseInt(data.initial_backoff || "300", 10)}`,
+    `  backoff_multiplier: ${Number.parseFloat(data.backoff_multiplier || "2")}`,
+    `  max_backoff_seconds: ${Number.parseInt(data.max_backoff || "21600", 10)}`,
   ];
 
   if (data.type === "http") {
@@ -160,7 +187,7 @@ function buildJobYaml(data) {
     lines.push(`  method: ${data.method || "GET"}`);
     lines.push(`  url: ${yamlString(data.url || "https://example.com")}`);
     lines.push(`  expected_status: [${(statuses.length ? statuses : [200]).join(", ")}]`);
-    const headers = parseHeaders(data.headers);
+    const headers = readHeaderRows();
     if (headers.length) {
       lines.push(`  headers:`);
       for (const [key, value] of headers) lines.push(`    ${key}: ${yamlString(value)}`);
@@ -302,7 +329,7 @@ function simulateBuilderSchedule() {
     .join("");
 }
 
-async function testBuilderJob() {
+async function performBuilderHttpTest() {
   const data = formData();
   const output = document.getElementById("test-output");
   if (data.type !== "http") {
@@ -318,7 +345,7 @@ async function testBuilderJob() {
   try {
     const response = await fetch(data.url, {
       method: data.method || "GET",
-      headers: Object.fromEntries(parseHeaders(data.headers)),
+      headers: Object.fromEntries(readHeaderRows()),
       body: data.body && !["GET", "HEAD"].includes(data.method) ? data.body : undefined,
       cache: "no-store",
     });
@@ -328,6 +355,23 @@ async function testBuilderJob() {
   } catch (err) {
     output.innerHTML = `${badge("failed")} <span class="detail">${escapeHtml(err.message || String(err))}. Browser tests may fail because of CORS even when the dispatcher can call the URL from GitHub Actions.</span>`;
   }
+}
+
+function testBuilderJob() {
+  const data = formData();
+  const output = document.getElementById("test-output");
+  if (data.type !== "http") {
+    output.textContent = "Script jobs cannot run from the static dashboard. Paste the YAML, then run npm run validate.";
+    return;
+  }
+  if (!document.querySelector('[name="send_test"]').checked) {
+    output.textContent = "Check the opt-in box first. The test sends one real request from your browser/network IP.";
+    return;
+  }
+  const dialog = document.getElementById("test-confirm-modal");
+  document.getElementById("test-confirm-url").textContent = data.url || "No URL configured";
+  if (dialog?.showModal) dialog.showModal();
+  else dialog?.setAttribute("open", "");
 }
 
 async function copyBuilderYaml() {
@@ -344,11 +388,30 @@ async function copyBuilderYaml() {
 function initBuilder() {
   const form = document.getElementById("job-builder");
   if (!form) return;
+  const dialog = document.getElementById("job-modal");
+  const openButton = document.getElementById("open-builder");
+  const closeButton = document.getElementById("close-builder");
   form.addEventListener("input", updateBuilder);
   form.addEventListener("change", updateBuilder);
+  openButton?.addEventListener("click", () => {
+    if (dialog?.showModal) dialog.showModal();
+    else dialog?.setAttribute("open", "");
+    updateBuilder();
+  });
+  closeButton?.addEventListener("click", () => dialog?.close());
+  dialog?.addEventListener("click", (event) => {
+    if (event.target === dialog) dialog.close();
+  });
+  document.getElementById("add-header").addEventListener("click", () => addHeaderRow());
   document.getElementById("simulate-job").addEventListener("click", simulateBuilderSchedule);
   document.getElementById("test-job").addEventListener("click", testBuilderJob);
+  document.getElementById("cancel-test").addEventListener("click", () => document.getElementById("test-confirm-modal").close());
+  document.getElementById("confirm-test").addEventListener("click", () => {
+    document.getElementById("test-confirm-modal").close();
+    performBuilderHttpTest();
+  });
   document.getElementById("copy-yaml").addEventListener("click", copyBuilderYaml);
+  updateHeaderEmptyState();
   updateBuilder();
 }
 
