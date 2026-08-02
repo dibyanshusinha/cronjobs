@@ -1,202 +1,163 @@
 # cronjobs
 
-A GitHub-native alternative to cron-job.org for public, non-sensitive jobs.
-Define cron jobs as YAML files; a GitHub Actions workflow polls every 5 minutes
-and runs whatever is due; results show up on a GitHub Pages dashboard and
-failures open a GitHub Issue.
+`cronjobs` is a Node.js cron dispatcher for scheduled HTTP requests and scripts.
+It can run as a free GitHub-native public cron runner, or as a private
+self-hosted Docker Compose service.
 
-The dispatcher is now a Node.js project, so local development uses `npm`
-instead of Python tooling.
+Jobs are plain YAML files under `jobs/`. The same shared engine handles job
+discovery, `_defaults.yml` inheritance, schema validation, cron calculation,
+misfire handling, retries, timeouts, execution, deduplication, history, and
+dashboard summary generation for both deployment modes.
 
-## Is this the right fit for your job?
+## Deployment Modes
 
-**This edition is public.** It's built to run in a public GitHub repo so Actions
-minutes are unlimited/free. That means:
+| Mode | Scheduler | Storage | Dashboard | Notifications | Best for |
+| --- | --- | --- | --- | --- | --- |
+| GitHub edition | GitHub Actions every 5 minutes | `cron-state` branch JSON | GitHub Pages | GitHub Issues | Public, non-sensitive jobs |
+| Standalone edition | Internal Node scheduler loop | SQLite | Authenticated local web server | Webhook/log adapter | Private jobs on your own server |
 
-- Job names, URLs, schedules, and script contents are visible to anyone.
-- GitHub Secrets keep secret values hidden. You can reference `${MY_SECRET}` in
-  an HTTP job's headers and substitute it at execution time, but the job's
-  existence, target URL, and schedule are still public.
-- Do not put internal hostnames, private admin endpoints, private scripts, or
-  sensitive execution metadata in this public repo.
-
-If your jobs themselves need secrecy, use this repository only as the public
-runner/software project and keep private jobs in a future standalone deployment.
+The standalone edition has no runtime dependency on GitHub Actions, GitHub
+Pages, GitHub Issues, or the GitHub API.
 
 ## Architecture
 
 ```text
-src/engine/       core scheduling, validation, executors, retry/history logic
-src/adapters/     GitHub-specific runtime glue
-adapters/github/site/
-                  static dashboard shell copied to cron-state:/docs
+jobs/**/*.job.yml
+        |
+        v
+src/engine/
+  discovery -> schema -> scheduler -> dispatch -> executors
+                                      |
+                                      v
+                            ledger + history + dashboard
+                                      |
+              +-----------------------+-----------------------+
+              |                                               |
+              v                                               v
+src/adapters/github/                         src/adapters/standalone/
+  GitHub Actions trigger                       internal timer
+  cron-state JSON storage                      SQLite storage
+  GitHub Issues notifications                  webhook/log notifications
+  GitHub Pages dashboard                       authenticated HTTP dashboard/API
 ```
 
-The core does not import GitHub-specific code. It depends on small interfaces:
+Core modules live under `src/engine/` and do not import deployment-specific
+code. Adapters provide storage, notification, trigger, and hosting behavior.
 
-- a JSON-like state backend, currently `JsonFileStateBackend`;
-- a notification adapter, currently GitHub Issues.
+## Requirements
 
-This split keeps the scheduler, job discovery, executors, and dashboard data
-generation reusable for a future self-hosted Docker/SQLite mode.
+- Node.js `24.13.1`
+- npm
+- Docker and Docker Compose for standalone deployment
 
-## The `cron-state` branch
+Node is pinned because the standalone SQLite adapter uses Node's built-in
+`node:sqlite` module. That module currently emits an experimental warning; keep
+the pinned Node version until SQLite behavior is deliberately retested.
 
-GitHub Actions runners are ephemeral, so dispatcher state must be persisted
-somewhere. Generated state lives on a separate **`cron-state`** branch:
+## Project Layout
 
 ```text
-state/*.json
-history/*.json
-docs/dashboard-data/summary.json
-docs/index.html
-docs/app.js
-docs/styles.css
+.github/workflows/       GitHub Actions dispatcher and validation workflows
+adapters/github/site/    Static dashboard shell used by GitHub Pages
+docs/self-hosted.md      Standalone deployment guide
+jobs/                    Example public job files and defaults
+schema/job.schema.json   Job schema
+scripts/                 Example script jobs
+src/engine/              Shared scheduler, validator, executor, history core
+src/adapters/github/     GitHub Actions, Issues, Pages adapter
+src/adapters/standalone/ Docker/SQLite/authenticated server adapter
+test/                    Node test suite
 ```
 
-The dispatcher never commits operational state to `main`.
+## GitHub Deployment
 
-GitHub Pages should serve from:
+Use this mode only for jobs whose metadata can be public. A public repository
+exposes job names, URLs, schedules, script source, dashboard data, and execution
+history. GitHub Secrets hide secret values, but they do not make public job
+definitions private.
+
+1. Push the repository to GitHub.
+2. Keep the repository public if you want free GitHub-hosted Actions minutes.
+3. Run the **Dispatch cron jobs** workflow once manually.
+4. Confirm the workflow creates the `cron-state` branch.
+5. Enable GitHub Pages:
 
 ```text
+Source: Deploy from a branch
 Branch: cron-state
 Folder: /docs
 ```
 
-## Two-phase commit
-
-Each run commits twice:
-
-1. Claim due occurrences before executing any job.
-2. Finalize dedup state, cursors, history, heartbeat, issues, and dashboard data
-   after execution finishes.
-
-If a runner dies after the claim commit, the next run reconciles stale claims
-instead of silently firing an occurrence twice.
-
-## Catch-up, not exact timing
-
-GitHub's scheduled workflow trigger is best-effort and can start late. The
-dispatcher tracks a per-job cursor and computes every cron occurrence that
-became due since the last evaluated time. This is why delayed ticks do not
-silently drop jobs.
-
-## Setup
-
-1. Create the repo as public on GitHub and push `main`.
-2. Trigger **Dispatch cron jobs** manually once so the workflow creates
-   `cron-state`.
-3. Enable Pages from `cron-state` / `/docs`.
-
-The example jobs do not need extra secrets. `GITHUB_TOKEN` is provided
-automatically by Actions with the workflow permissions already configured.
-
-## Adding a job
-
-Create a file under `jobs/` ending in `.job.yml`.
+The workflow runs every 5 minutes:
 
 ```yaml
-id: my-unique-job-id
-name: "Human-readable name"
-schedule: "*/10 * * * *"
-type: http
-http:
-  url: "https://example.com/ping"
-  expected_status: [200]
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
 ```
 
-Nested folders are supported and are only for organization.
+Generated operational state is written to `cron-state`, not `main`.
 
-The dashboard includes a **Create job** helper. It opens as a focused dialog so
-the monitoring view stays clean. It lets you fill out the fields, add HTTP
-headers, skip selected weekdays, set job timeouts and failure safeguards,
-generate copy-ready YAML, simulate upcoming run times, and test a public HTTP
-request directly from your browser after an explicit confirmation. The YAML
-stays collapsed behind a preview because the normal path is to use the copy
-button. The browser test is useful when you want the receiving service to see
-your current browser/network IP instead of a GitHub Actions runner IP.
+## Standalone Deployment
 
-Scheduled jobs still run from GitHub Actions, so production executions will
-come from GitHub-hosted runner infrastructure unless you later move the job to a
-self-hosted runner or standalone deployment. Do not rely on spoofed headers such
-as `X-Forwarded-For` for identity; the real source IP is decided by where the
-request is executed.
+Use standalone mode for private jobs, private URLs, private scripts, and private
+execution history.
 
-## Defaults inheritance
+```bash
+cp .env.example .env
+```
 
-Add `_defaults.yml` in any folder under `jobs/` to set defaults for that folder
-and its subfolders. Deeper defaults override shallower defaults, and a job's own
-fields override all defaults.
+Edit `.env` and set a strong `DASHBOARD_PASSWORD` or `DASHBOARD_TOKEN`.
 
-Allowed default keys:
+```bash
+docker compose up -d --build
+```
+
+Open:
 
 ```text
-timezone
-enabled
-retries
-retry_backoff_seconds
-timeout_seconds
-misfire_policy
-misfire_cap
-history_limit
-history_retention_days
-failure_policy
-notify
+http://127.0.0.1:8080/
 ```
 
-Identity and job-specific execution fields such as `id`, `schedule`, `type`,
-`http`, and `script` must be set per job.
+The default Compose file binds the dashboard to loopback only. For remote
+access, put it behind a TLS reverse proxy and keep authentication enabled.
 
-## Referencing a secret in an HTTP job
+Runtime mounts:
 
-Header values of the exact form `${VAR_NAME}` are substituted from the process
-environment at execution time:
-
-```yaml
-http:
-  url: "https://example.com/webhook"
-  headers:
-    Authorization: "${MY_WEBHOOK_TOKEN}"
+```text
+jobs/       read-only job definitions
+scripts/    read-only script files
+data/       SQLite database and runtime state
+.env        local deployment configuration
 ```
 
-Add `MY_WEBHOOK_TOKEN` as a repo secret and pass it through in
-`.github/workflows/dispatcher.yml` for the "Run dispatcher" step. The value is
-never logged or stored in history.
+Do not commit private jobs, private scripts, `.env`, SQLite files, backups, or
+runtime data.
 
-## Misfire policy
+More detail is in `docs/self-hosted.md`.
 
-If the dispatcher is delayed and a job's schedule fired multiple times since it
-was last checked:
+## Job Defaults
 
-- `most_recent` runs only the latest missed occurrence and records older ones as
-  `skipped`.
-- `all` runs every missed occurrence, capped by `misfire_cap`.
+Add `_defaults.yml` under `jobs/` or any subfolder to inherit common settings.
+Deeper defaults override shallower defaults, and a job's own fields override all
+defaults.
 
-## Manual runs
-
-Actions tab -> **Dispatch cron jobs** -> **Run workflow** -> enter `job_id`.
-
-Manual runs bypass the schedule but not the `enabled` flag. Running a disabled
-or auto-disabled job requires `force_disabled`.
-
-## Enabling and disabling jobs
-
-Jobs are enabled or disabled in their `.job.yml` file:
+Example:
 
 ```yaml
-enabled: false
-```
-
-The GitHub Pages dashboard is static, so it does not directly commit changes to
-`main`. Each expanded job card includes a management helper that copies the
-exact enable/disable edit instructions for that job file. After editing, run
-`npm run validate`, commit, and push.
-
-## Failure backoff and auto-disable
-
-Each job has a failure policy. Defaults are intentionally conservative:
-
-```yaml
+timezone: UTC
+enabled: true
+retries: 2
+retry_backoff_seconds: 30
+timeout_seconds: 30
+misfire_policy: most_recent
+misfire_cap: 10
+history_limit: 100
+history_retention_days: 365
+notify:
+  on_failure: true
+  on_recovery: true
 failure_policy:
   auto_disable_after_consecutive_failures: 5
   initial_backoff_seconds: 300
@@ -204,51 +165,57 @@ failure_policy:
   max_backoff_seconds: 21600
 ```
 
-When a job fails, future automatic runs pause with exponential backoff. After
-the configured consecutive-failure threshold, the job is auto-disabled so the
-runner stops calling an endpoint that may be broken, rate-limited, or rejecting
-requests.
+## Adding HTTP Jobs
 
-Manual runs can still be used to test recovery. If a job is auto-disabled, use
-`force_disabled` explicitly. A successful run clears the failure pause and
-auto-disable state.
-
-The dashboard shows `paused` and `disabled` states separately.
-
-## Dashboard statistics
-
-The main dashboard is intentionally a consolidated operations view. It shows:
-
-- total jobs, failures, disabled jobs, 24-hour run count, success rate, and
-  average duration;
-- a 24-hour activity graph;
-- a recent status mix graph;
-- compact per-job trend dots for quick scanning;
-- a paginated job list so large repositories do not become one long page.
-
-Selecting a job opens a focused job-detail panel with that job's own run count,
-success rate, failure count, average duration, duration trend, status mix,
-schedule, failure policy, management helper, and paginated recent history.
-
-## History display and cleanup
-
-Recent history is shown in each job's focused detail view with pagination so
-long failure or skip streaks do not overwhelm the main page. The dashboard
-summary publishes a capped recent slice per job plus 24-hour statistics such as
-run count, success rate, and average duration. Full archived history continues
-to be stored under `history/archive/YYYY-MM/` on the `cron-state` branch.
-Archive cleanup follows each job's `history_retention_days` setting.
-
-## Script jobs
-
-`script.path` must point to a repo-relative file under `scripts/`, for example:
+Create `jobs/<folder>/<name>.job.yml`:
 
 ```yaml
+id: production-health
+name: Production health
+schedule: "*/15 * * * *"
+timezone: UTC
+enabled: true
+type: http
+retries: 2
+retry_backoff_seconds: 30
+http:
+  method: GET
+  url: "https://example.com/health"
+  expected_status: [200]
+  timeout_seconds: 10
+  headers:
+    User-Agent: cronjobs/1.0
+```
+
+Header values of the exact form `${VAR_NAME}` are substituted from environment
+variables at execution time:
+
+```yaml
+http:
+  headers:
+    Authorization: "${MY_API_TOKEN}"
+```
+
+For GitHub mode, add `MY_API_TOKEN` as a GitHub Actions secret and expose it to
+the dispatcher workflow step. For standalone mode, put it in `.env`, Docker
+secrets, or a mounted secrets directory.
+
+## Adding Script Jobs
+
+Script jobs run committed or mounted files under `scripts/`:
+
+```yaml
+id: backup-check
+name: Backup check
+schedule: "0 3 * * *"
+timezone: UTC
 type: script
+retries: 1
 script:
   path: scripts/examples/backup_check.sh
   interpreter: bash
   args: ["--verbose"]
+  timeout_seconds: 60
 ```
 
 Security rules:
@@ -257,62 +224,234 @@ Security rules:
 - no absolute paths;
 - no `..` traversal;
 - no symlink escape;
-- only `bash`, `python3`, and `node` interpreters are allowed;
-- stdout/stderr are not stored in history.
+- script paths must resolve under `scripts/`;
+- allowed interpreters are `bash`, `python3`, and `node`;
+- stdout and stderr are not stored in history.
 
-## Redaction
+## Scheduler Behavior
 
-Public history and dashboard data never contain:
-
-- HTTP response bodies or headers;
-- script stdout/stderr;
-- request headers;
-- credentials or Authorization values.
-
-Stored detail strings are capped at 300 characters.
-
-## History storage and cleanup
-
-The dashboard reads a small recent-history file per job so the UI stays fast.
-The dispatcher also writes month-based archive files under:
+The dispatcher uses cursor-based catch-up. It does not simply ask whether a cron
+expression matches the current minute.
 
 ```text
-history/archive/YYYY-MM/<job-id>.json
+last evaluated time < scheduled occurrence <= now
 ```
 
-Those archive files live on the `cron-state` branch with the rest of the
-generated state. `history_retention_days` controls cleanup of old archive
-entries; the default is 365 days. Git itself still preserves prior committed
-state in repository history until you intentionally rewrite or prune it.
+That makes delayed GitHub Actions runs and restarted standalone services more
+robust.
 
-## Local development
+Manual runs bypass the schedule, but not disabled or auto-disabled state unless
+`force_disabled` is explicitly supplied.
+
+## Misfire Handling
+
+If multiple occurrences became due since the last evaluation:
+
+- `most_recent` runs only the latest occurrence and records older ones as
+  skipped;
+- `all` runs every missed occurrence, capped by `misfire_cap`.
+
+## Retries, Timeouts, And Auto-Disable
+
+Each job supports retries and timeout configuration. Failed attempts back off
+exponentially:
+
+```yaml
+retries: 2
+retry_backoff_seconds: 30
+failure_policy:
+  auto_disable_after_consecutive_failures: 5
+  initial_backoff_seconds: 300
+  backoff_multiplier: 2
+  max_backoff_seconds: 21600
+```
+
+After too many consecutive failures, the job is auto-disabled so the dispatcher
+does not keep hammering an endpoint that may be broken, rate-limited, or
+rejecting requests. A successful manual run can clear the failure state.
+
+## Deduplication And Recovery
+
+Every occurrence is identified by:
+
+```text
+jobId|scheduledTime
+```
+
+The ledger claims occurrences before execution and finalizes them after
+execution. On restart, finalized occurrences are not executed again. Stale
+running claims are reconciled so the system does not silently lose track of
+interrupted work.
+
+For non-idempotent endpoints, make the receiving service idempotent by checking
+the `X-Cron-Execution-Id` header.
+
+## Notifications
+
+Notification behavior is adapter-based:
+
+- GitHub mode uses GitHub Issues.
+- Standalone mode can send a generic webhook, or log notifications when no
+  webhook is configured.
+
+Failures create or update a job-specific notification. Recovery can close or
+resolve that notification depending on the adapter.
+
+## Dashboard
+
+The dashboard shows:
+
+- dispatcher heartbeat;
+- total jobs, failures, disabled jobs, 24-hour run count, success rate, and
+  average duration;
+- consolidated activity and status graphs;
+- paginated searchable job list;
+- focused per-job details with schedule, failure policy, recent history, status
+  mix, and duration trend;
+- a Create Job helper that generates YAML and can test public HTTP requests
+  from the browser after confirmation.
+
+The GitHub dashboard is static and published from `cron-state:/docs`. The
+standalone dashboard is served by the local authenticated Node server.
+
+## Backup And Restore
+
+Standalone backups include jobs, scripts, SQLite data, and a manifest:
+
+```bash
+npm run standalone:backup -- ./backups/manual-$(date +%Y%m%d)
+```
+
+Restore:
+
+```bash
+npm run standalone:restore -- ./backups/manual-20260802
+```
+
+Stop the standalone service before restoring SQLite data.
+
+In GitHub mode, operational state is in the `cron-state` branch. Job definitions
+remain in `main`.
+
+## Security Model
+
+Public GitHub mode:
+
+- use only public, non-sensitive jobs;
+- keep secrets in GitHub Actions secrets;
+- never commit credentials, private URLs, or private scripts;
+- remember that dashboard history is public.
+
+Standalone mode:
+
+- keep `ALLOW_NO_AUTH=false` outside local development;
+- any non-loopback exposure must require authentication;
+- bind to `127.0.0.1` by default;
+- put remote access behind TLS and a reverse proxy;
+- mount jobs and scripts read-only;
+- store secrets in `.env`, Docker secrets, or mounted secret files;
+- keep `data/`, `backups/`, SQLite files, and `.env` out of Git.
+
+Shared protections:
+
+- script path traversal and symlink escapes are blocked;
+- HTTP redirects are not followed automatically;
+- response reads are capped;
+- history details are capped and redact likely secret environment values;
+- full HTTP bodies, request headers, script output, and credentials are not
+  stored in dashboard history.
+
+## Configuration
+
+Standalone configuration comes from environment variables:
+
+```text
+DASHBOARD_USER
+DASHBOARD_PASSWORD
+DASHBOARD_TOKEN
+ALLOW_NO_AUTH
+HOST
+PORT
+POLL_SECONDS
+MAX_CONCURRENCY
+DATA_DIR
+SQLITE_PATH
+JOBS_DIR
+SCRIPTS_ROOT
+SECRETS_DIR
+NOTIFY_WEBHOOK_URL
+```
+
+See `.env.example` for defaults.
+
+## Development
 
 ```bash
 npm install
 npm run validate
 npm test
+npm audit
+docker compose config
 ```
 
-To run the GitHub adapter locally, point `STATE_DIR` at a temporary checkout or
-scratch directory. Do not point it at `main`:
+Run the standalone server locally:
 
 ```bash
-STATE_DIR=.local-state \
-GITHUB_TOKEN=dummy \
-GITHUB_REPOSITORY=owner/repo \
-npm run dispatch:github
+ALLOW_NO_AUTH=true npm run standalone:start
 ```
 
-The real GitHub workflow prepares a `cron-state` worktree before running the
-dispatcher.
+`ALLOW_NO_AUTH=true` is development-only.
 
-## Self-hosted mode
+## Troubleshooting
 
-Self-hosted mode is designed for but not built yet. The Node core under
-`src/engine/` is GitHub-independent, so a future Docker Compose deployment can
-reuse the same job schema, scheduler, discovery, validation, executors, retry
-logic, and dashboard data model.
+**The GitHub workflow did not run exactly on time.**
+GitHub scheduled workflows are best-effort. The cursor-based catch-up logic is
+designed for delayed runs.
 
-That future mode should supply its own state backend, likely SQLite, and its
-own notifier/web UI instead of depending on GitHub Actions, GitHub Pages, or
-GitHub Issues at runtime.
+**The dashboard is stale.**
+Check the dispatcher heartbeat. In GitHub mode, confirm the Actions workflow is
+enabled and `cron-state` is updating. In standalone mode, check `/healthz`,
+`/readyz`, and container logs.
+
+**Pages returns 404.**
+Enable Pages from `cron-state` and `/docs` after the first dispatcher run
+creates the branch.
+
+**A job keeps failing.**
+Inspect the job detail view, failure policy, timeout, expected status codes, and
+receiving service logs. Exponential backoff and auto-disable may pause further
+runs.
+
+**A standalone dashboard request returns 401.**
+Use Basic auth with `DASHBOARD_USER` and `DASHBOARD_PASSWORD`, or Bearer auth
+with `DASHBOARD_TOKEN`.
+
+**SQLite prints an experimental warning.**
+That is expected for now. Node is pinned to `24.13.1`, and SQLite behavior is
+covered by tests.
+
+## FAQ
+
+**Can this replace cron-job.org completely?**
+It covers scheduled HTTP requests, scripts, retries, history, notifications,
+and dashboards. GitHub mode has a 5-minute cadence. Standalone mode can poll
+more frequently.
+
+**Can I keep private jobs in the public GitHub repo?**
+No. Secrets can be hidden, but job URLs, names, schedules, scripts, and history
+are public. Use standalone mode for private jobs.
+
+**Can I add a PostgreSQL storage adapter later?**
+Yes. Storage is behind the state backend interface used by the ledger and
+history store. SQLite is one implementation.
+
+**Can I add Slack, email, or Discord notifications?**
+Yes. Notifications are adapter-based. Add another notifier without changing the
+shared scheduler or executor core.
+
+**Does standalone mode need GitHub at runtime?**
+No.
+
+**Does GitHub mode still work after adding standalone mode?**
+Yes. The GitHub adapter still uses the same shared Node core and its existing
+GitHub Actions workflow.

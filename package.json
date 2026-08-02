@@ -4,9 +4,15 @@
   "private": true,
   "description": "GitHub-native cron job dispatcher for scheduled HTTP requests and scripts, powered by GitHub Actions and Pages.",
   "type": "commonjs",
+  "engines": {
+    "node": "24.13.1"
+  },
   "scripts": {
     "validate": "node src/engine/validate-cli.js",
     "dispatch:github": "node src/adapters/github/run-dispatcher.js",
+    "standalone:start": "node src/adapters/standalone/server.js",
+    "standalone:backup": "node src/adapters/standalone/backup.js backup",
+    "standalone:restore": "node src/adapters/standalone/backup.js restore",
     "test": "node --test"
   },
   "dependencies": {
