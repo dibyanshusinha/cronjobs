@@ -6,6 +6,7 @@ const JOBS_PAGE_SIZE = 8;
 let dashboardData = null;
 let jobsPage = 0;
 let selectedJobId = null;
+let jobFilter = "";
 const WEEKDAYS = [
   ["0", "Sun"],
   ["1", "Mon"],
@@ -777,29 +778,12 @@ function setHistoryPage(root, index, page) {
   if (next) next.disabled = nextPage >= pageCount - 1;
 }
 
-function renderJobDetail(job, index) {
-  const el = document.getElementById("job-detail");
-  if (!job) {
-    el.innerHTML = "";
-    el.hidden = true;
-    selectedJobId = null;
-    return;
-  }
-  selectedJobId = job.id;
+function renderJobAccordion(job, index) {
   const status = effectiveStatus(job);
   const pausedUntil = status === "paused" ? renderTime(job.failure_pause_until_utc, job.timezone) : "";
   const disabledDetail = job.auto_disabled ? job.auto_disabled_reason || "Auto-disabled after failures" : "";
-  el.hidden = false;
-  el.innerHTML = `
-    <article class="job-detail-card">
-      <div class="job-detail-head">
-        <div>
-          <button type="button" class="link-button" id="back-to-jobs">← Back to all jobs</button>
-          <h2>${escapeHtml(job.name || job.id)}</h2>
-          <p class="subtle">${escapeHtml(job.id)}</p>
-        </div>
-        <div>${badge(status)}${disabledDetail ? `<span class="detail">${escapeHtml(disabledDetail)}</span>` : ""}${pausedUntil ? `<span class="detail">until ${pausedUntil}</span>` : ""}</div>
-      </div>
+  return `
+    <div class="accordion-body" data-accordion-body="${index}">
       ${renderJobStatsStrip(job)}
       <div class="job-detail-grid">
         <section class="chart-card">
@@ -818,6 +802,7 @@ function renderJobDetail(job, index) {
         </section>
       </div>
       <div class="detail-grid">
+        <div><span class="field-label">Status</span><span class="field-value">${badge(status)}${disabledDetail ? `<span class="detail">${escapeHtml(disabledDetail)}</span>` : ""}${pausedUntil ? `<span class="detail">until ${pausedUntil}</span>` : ""}</span></div>
         <div><span class="field-label">Schedule</span><span class="field-value"><code>${escapeHtml(job.schedule)}</code><span class="detail">${escapeHtml(job.timezone || "UTC")}</span></span></div>
         <div><span class="field-label">Last run</span><span class="field-value">${renderTime(job.last_evaluated_utc, job.timezone)}${triggerLabel(job.last_trigger)}</span></div>
         <div><span class="field-label">Next due</span><span class="field-value">${job.enabled && !job.auto_disabled ? renderTime(job.next_due_utc, job.timezone) : `<span class="time-secondary">Disabled</span>`}</span></div>
@@ -839,74 +824,75 @@ function renderJobDetail(job, index) {
       </div>
       <h3 class="section-title">History</h3>
       ${renderHistory(job, index)}
-    </article>
+    </div>
   `;
-  document.getElementById("back-to-jobs").addEventListener("click", () => {
-    selectedJobId = null;
-    renderJobDetail(null);
-    renderJobs(dashboardData?.jobs || []);
-    document.getElementById("jobs").scrollIntoView({ behavior: "smooth", block: "start" });
-  });
-  el.querySelectorAll(".history-prev, .history-next").forEach((button) => {
-    button.addEventListener("click", () => {
-      const targetIndex = button.dataset.historyTarget;
-      const current = Number.parseInt(el.querySelector(`[data-history-current="${targetIndex}"]`)?.textContent || "1", 10) - 1;
-      setHistoryPage(el, targetIndex, button.classList.contains("history-next") ? current + 1 : current - 1);
-    });
-  });
-  el.querySelectorAll(".copy-toggle").forEach((button) => {
-    button.addEventListener("click", async () => {
-      const targetIndex = Number.parseInt(button.dataset.jobIndex, 10);
-      const note = el.querySelector(`[data-toggle-note="${targetIndex}"]`);
-      const message = await copyJobToggleInstruction((dashboardData?.jobs || [])[targetIndex], button.dataset.nextEnabled === "true");
-      if (note) note.textContent = message;
-    });
-  });
-  setHistoryPage(el, String(index), 0);
-  el.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 function setJobsPage(page) {
-  const jobs = dashboardData?.jobs || [];
+  const jobs = filteredJobs();
   const pageCount = Math.max(1, Math.ceil(jobs.length / JOBS_PAGE_SIZE));
   jobsPage = Math.max(0, Math.min(page, pageCount - 1));
-  renderJobs(jobs);
+  renderJobs(dashboardData?.jobs || []);
+}
+
+function filteredJobs() {
+  const jobs = dashboardData?.jobs || [];
+  const query = jobFilter.trim().toLowerCase();
+  if (!query) return jobs;
+  return jobs.filter((job) =>
+    [job.id, job.name, job.type, job.schedule, job.file_path]
+      .filter(Boolean)
+      .some((value) => String(value).toLowerCase().includes(query))
+  );
 }
 
 function renderJobs(jobs) {
   const el = document.getElementById("jobs");
   if (!jobs.length) {
     el.innerHTML = `<div class="empty-state">No jobs found.</div>`;
-    renderJobDetail(null);
     return;
   }
-  const pageCount = Math.max(1, Math.ceil(jobs.length / JOBS_PAGE_SIZE));
+  const visibleJobs = filteredJobs();
+  if (selectedJobId && !visibleJobs.some((job) => job.id === selectedJobId)) {
+    selectedJobId = null;
+  }
+  const pageCount = Math.max(1, Math.ceil(visibleJobs.length / JOBS_PAGE_SIZE));
   jobsPage = Math.max(0, Math.min(jobsPage, pageCount - 1));
-  const pageJobs = jobs.slice(jobsPage * JOBS_PAGE_SIZE, (jobsPage + 1) * JOBS_PAGE_SIZE);
-  const start = jobsPage * JOBS_PAGE_SIZE + 1;
-  const end = Math.min(jobs.length, (jobsPage + 1) * JOBS_PAGE_SIZE);
+  const pageJobs = visibleJobs.slice(jobsPage * JOBS_PAGE_SIZE, (jobsPage + 1) * JOBS_PAGE_SIZE);
+  const start = visibleJobs.length ? jobsPage * JOBS_PAGE_SIZE + 1 : 0;
+  const end = Math.min(visibleJobs.length, (jobsPage + 1) * JOBS_PAGE_SIZE);
   el.innerHTML = `
     <div class="section-head">
       <div>
         <h2>Jobs</h2>
-        <p class="subtle">Consolidated view. Select a job for detailed statistics and history.</p>
+        <p class="subtle">Filter by name or ID. Click a row to open its accordion.</p>
       </div>
-      <div class="pager">
-        <button type="button" class="secondary-action" id="jobs-prev">Previous</button>
-        <span class="history-page-label">${start}-${end} of ${jobs.length}</span>
-        <button type="button" class="secondary-action" id="jobs-next">Next</button>
+      <div class="jobs-tools">
+        <label class="filter-field">
+          <span>Filter jobs</span>
+          <input id="job-filter" value="${escapeHtml(jobFilter)}" placeholder="Name, ID, path..." autocomplete="off" />
+        </label>
+        <div class="pager">
+          <button type="button" class="secondary-action" id="jobs-prev">Previous</button>
+          <span class="history-page-label">${start}-${end} of ${visibleJobs.length}</span>
+          <button type="button" class="secondary-action" id="jobs-next">Next</button>
+        </div>
       </div>
     </div>
     <div class="jobs-list">
-      ${pageJobs
-    .map((job, index) => {
-      const actualIndex = jobsPage * JOBS_PAGE_SIZE + index;
+      ${
+        pageJobs.length
+          ? pageJobs
+    .map((job) => {
+      const actualIndex = jobs.findIndex((candidate) => candidate.id === job.id);
       const status = effectiveStatus(job);
       const pausedUntil = status === "paused" ? renderTime(job.failure_pause_until_utc, job.timezone) : "";
       const disabledDetail = job.auto_disabled ? job.auto_disabled_reason || "Auto-disabled after failures" : "";
+      const expanded = selectedJobId === job.id;
+      const detailsId = `job-accordion-${actualIndex}`;
       return `
-        <article class="job-card ${selectedJobId === job.id ? "selected" : ""}">
-          <button class="job-main job-select" type="button" data-job-index="${actualIndex}">
+        <article class="job-card ${expanded ? "selected" : ""}">
+          <button class="job-main job-select" type="button" data-job-index="${actualIndex}" aria-expanded="${expanded}" aria-controls="${detailsId}">
             <div>
               <h2 class="job-title">${escapeHtml(job.name || job.id)}</h2>
               <span class="job-id">${escapeHtml(job.id)}</span>
@@ -928,15 +914,32 @@ function renderJobs(jobs) {
               ${renderJobStatsStrip(job)}
             </div>
             <div class="actions">
-              <span class="open-indicator">View</span>
+              <span class="accordion-indicator" aria-hidden="true">${expanded ? "−" : "+"}</span>
             </div>
           </button>
+          <div id="${detailsId}" ${expanded ? "" : "hidden"}>
+            ${expanded ? renderJobAccordion(job, actualIndex) : ""}
+          </div>
         </article>
       `;
     })
-    .join("")}
+    .join("")
+          : `<div class="empty-state">No jobs match this filter.</div>`
+      }
     </div>
   `;
+
+  const filterInput = document.getElementById("job-filter");
+  if (filterInput) {
+    filterInput.addEventListener("input", () => {
+      jobFilter = filterInput.value;
+      jobsPage = 0;
+      renderJobs(jobs);
+      const nextInput = document.getElementById("job-filter");
+      nextInput?.focus();
+      nextInput?.setSelectionRange(jobFilter.length, jobFilter.length);
+    });
+  }
 
   const prev = document.getElementById("jobs-prev");
   const next = document.getElementById("jobs-next");
@@ -952,10 +955,34 @@ function renderJobs(jobs) {
   el.querySelectorAll(".job-select").forEach((button) => {
     button.addEventListener("click", () => {
       const index = Number.parseInt(button.dataset.jobIndex, 10);
-      renderJobDetail(jobs[index], index);
+      selectedJobId = selectedJobId === jobs[index].id ? null : jobs[index].id;
       renderJobs(jobs);
     });
   });
+
+  el.querySelectorAll(".history-prev, .history-next").forEach((button) => {
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      const targetIndex = button.dataset.historyTarget;
+      const current = Number.parseInt(el.querySelector(`[data-history-current="${targetIndex}"]`)?.textContent || "1", 10) - 1;
+      setHistoryPage(el, targetIndex, button.classList.contains("history-next") ? current + 1 : current - 1);
+    });
+  });
+
+  el.querySelectorAll(".copy-toggle").forEach((button) => {
+    button.addEventListener("click", async (event) => {
+      event.stopPropagation();
+      const index = Number.parseInt(button.dataset.jobIndex, 10);
+      const note = el.querySelector(`[data-toggle-note="${index}"]`);
+      const message = await copyJobToggleInstruction(jobs[index], button.dataset.nextEnabled === "true");
+      if (note) note.textContent = message;
+    });
+  });
+
+  if (selectedJobId) {
+    const index = jobs.findIndex((job) => job.id === selectedJobId);
+    if (index >= 0) setHistoryPage(el, String(index), 0);
+  }
 }
 
 async function main() {
