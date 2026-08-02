@@ -39,6 +39,11 @@
       "status": "success",
       "claimed_at": "2026-08-02T03:46:15.133Z",
       "finished_at": "2026-08-02T03:46:15.133Z"
+    },
+    "example-http-ping|2026-08-02T04:00:00.000Z": {
+      "status": "running",
+      "claimed_at": "2026-08-02T04:01:01.009Z",
+      "finished_at": null
     }
   }
 }
