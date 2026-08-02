@@ -903,6 +903,12 @@ code {
   border-color: color-mix(in srgb, var(--ok), transparent 68%);
 }
 
+.badge.enabled {
+  color: var(--ok);
+  background: var(--ok-bg);
+  border-color: color-mix(in srgb, var(--ok), transparent 68%);
+}
+
 .badge.failed {
   color: var(--fail);
   background: var(--fail-bg);
@@ -917,6 +923,8 @@ code {
 }
 
 .badge.disabled,
+.badge.deleted,
+.badge.auto-disabled,
 .badge.unknown {
   color: var(--disabled);
   background: var(--disabled-bg);

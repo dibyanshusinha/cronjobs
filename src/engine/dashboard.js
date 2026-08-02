@@ -12,6 +12,7 @@ function displayPath(filePath) {
 
 function buildSummary(jobs, ledger, history, now) {
   let failing = 0;
+  const currentJobIds = new Set(jobs.map((job) => job.id));
   const dayAgo = now.getTime() - 24 * 60 * 60 * 1000;
   const stats = {
     executions_24h: 0,
@@ -74,10 +75,40 @@ function buildSummary(jobs, ledger, history, now) {
       };
     });
 
+  const deletedEntries = history.list ? history.list()
+    .filter((jobId) => !currentJobIds.has(jobId))
+    .sort((a, b) => a.localeCompare(b))
+    .map((jobId) => {
+      const recent = history.recent(jobId, 50);
+      const lastReal = [...recent].reverse().find((run) => run.status !== "skipped") || null;
+      return {
+        id: jobId,
+        name: `Deleted job: ${jobId}`,
+        type: "deleted",
+        file_path: null,
+        enabled: false,
+        deleted: true,
+        auto_disabled: false,
+        auto_disabled_reason: null,
+        failure_pause_until_utc: null,
+        schedule: null,
+        timezone: "UTC",
+        history_retention_days: null,
+        failure_policy: null,
+        last_evaluated_utc: lastReal ? lastReal.finished_at || lastReal.scheduled_time : null,
+        last_status: lastReal ? lastReal.status : null,
+        last_trigger: lastReal ? lastReal.trigger : null,
+        consecutive_failures: 0,
+        next_due_utc: null,
+        open_issue: null,
+        recent_history: recent,
+      };
+    }) : [];
+
   return {
     generated_at: iso(now),
     heartbeat: ledger.heartbeat,
-    jobs: jobEntries,
+    jobs: [...jobEntries, ...deletedEntries],
     meta: {
       total_jobs: jobs.length,
       failing_jobs: failing,

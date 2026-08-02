@@ -69,6 +69,14 @@ class HistoryStore {
     return data.runs.slice(-limit);
   }
 
+  list() {
+    if (!this.backend.list) return [];
+    return this.backend.list("history")
+      .filter((name) => /^history\/[^/]+$/.test(name))
+      .map((name) => name.slice("history/".length))
+      .sort();
+  }
+
   archiveName(jobId, result) {
     const stamp = result.finished_at || result.scheduled_time || new Date().toISOString();
     const month = stamp.slice(0, 7);

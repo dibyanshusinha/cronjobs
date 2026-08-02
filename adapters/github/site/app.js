@@ -144,6 +144,14 @@ function badge(status) {
   return `<span class="badge ${escapeHtml(value)}">${escapeHtml(value)}</span>`;
 }
 
+function schedulerState(job) {
+  if (job.deleted) return "deleted";
+  if (job.auto_disabled) return "auto-disabled";
+  if (!job.enabled) return "disabled";
+  if (job.failure_pause_until_utc && new Date(job.failure_pause_until_utc) > new Date()) return "paused";
+  return "enabled";
+}
+
 function triggerLabel(trigger) {
   if (!trigger) return "";
   return `<span class="detail">${escapeHtml(trigger)}</span>`;
@@ -531,9 +539,14 @@ function initDurationTooltips(root = document) {
 }
 
 function effectiveStatus(job) {
+  if (job.deleted) return "deleted";
   if (!job.enabled || job.auto_disabled) return "disabled";
   if (job.failure_pause_until_utc && new Date(job.failure_pause_until_utc) > new Date()) return "paused";
   return job.last_status || "unknown";
+}
+
+function canSchedule(job) {
+  return job.enabled && !job.auto_disabled && !job.deleted;
 }
 
 function renderHeartbeat(heartbeat) {
@@ -555,14 +568,18 @@ function renderHeartbeat(heartbeat) {
 function renderSummary(data) {
   const total = data.meta?.total_jobs || 0;
   const failing = data.meta?.failing_jobs || 0;
-  const disabled = (data.jobs || []).filter((job) => !job.enabled || job.auto_disabled).length;
-  const paused = (data.jobs || []).filter((job) => effectiveStatus(job) === "paused").length;
+  const enabled = (data.jobs || []).filter((job) => schedulerState(job) === "enabled").length;
+  const disabled = (data.jobs || []).filter((job) => ["disabled", "auto-disabled"].includes(schedulerState(job))).length;
+  const paused = (data.jobs || []).filter((job) => schedulerState(job) === "paused").length;
+  const deleted = (data.jobs || []).filter((job) => schedulerState(job) === "deleted").length;
   const successRate = data.meta?.success_rate_24h === null || data.meta?.success_rate_24h === undefined ? "-" : `${data.meta.success_rate_24h}%`;
   document.getElementById("summary").innerHTML = [
     ["Total jobs", total],
+    ["Enabled", enabled],
     ["Failing", failing],
     ["Paused", paused],
     ["Disabled", disabled],
+    ["Deleted", deleted],
     ["Runs 24h", data.meta?.executions_24h || 0],
     ["Success 24h", successRate],
     ["Avg duration", duration(data.meta?.avg_duration_ms_24h)],
@@ -918,6 +935,8 @@ function setHistoryPage(root, index, page) {
 
 function renderJobAccordion(job, index) {
   const status = effectiveStatus(job);
+  const state = schedulerState(job);
+  const scheduleValue = job.schedule ? `<code>${escapeHtml(job.schedule)}</code>` : `<span class="time-secondary">Removed from jobs/</span>`;
   const pausedUntil = status === "paused" ? renderTime(job.failure_pause_until_utc, job.timezone) : "";
   const disabledDetail = job.auto_disabled ? job.auto_disabled_reason || "Auto-disabled after failures" : "";
   return `
@@ -940,10 +959,11 @@ function renderJobAccordion(job, index) {
         </section>
       </div>
       <div class="detail-grid">
-        <div><span class="field-label">Status</span><span class="field-value">${badge(status)}${disabledDetail ? `<span class="detail">${escapeHtml(disabledDetail)}</span>` : ""}${pausedUntil ? `<span class="detail">until ${pausedUntil}</span>` : ""}</span></div>
-        <div><span class="field-label">Schedule</span><span class="field-value"><code>${escapeHtml(job.schedule)}</code><span class="detail">${escapeHtml(job.timezone || "UTC")}</span></span></div>
+        <div><span class="field-label">Scheduler state</span><span class="field-value">${badge(state)}${disabledDetail ? `<span class="detail">${escapeHtml(disabledDetail)}</span>` : ""}${pausedUntil ? `<span class="detail">until ${pausedUntil}</span>` : ""}</span></div>
+        <div><span class="field-label">Last result</span><span class="field-value">${badge(job.last_status || "unknown")}${triggerLabel(job.last_trigger)}</span></div>
+        <div><span class="field-label">Schedule</span><span class="field-value">${scheduleValue}<span class="detail">${escapeHtml(job.timezone || "UTC")}</span></span></div>
         <div><span class="field-label">Last run</span><span class="field-value">${renderTime(job.last_evaluated_utc, job.timezone)}${triggerLabel(job.last_trigger)}</span></div>
-        <div><span class="field-label">Next due</span><span class="field-value">${job.enabled && !job.auto_disabled ? renderTime(job.next_due_utc, job.timezone) : `<span class="time-secondary">Disabled</span>`}</span></div>
+        <div><span class="field-label">Next due</span><span class="field-value">${canSchedule(job) ? renderTime(job.next_due_utc, job.timezone) : `<span class="time-secondary">${job.deleted ? "Deleted" : "Disabled"}</span>`}</span></div>
         <div><span class="field-label">Failure policy</span><span class="field-value">disable after ${escapeHtml(job.failure_policy?.auto_disable_after_consecutive_failures ?? 5)} failures<span class="detail">max backoff ${escapeHtml(job.failure_policy?.max_backoff_seconds ?? 21600)}s</span></span></div>
         <div><span class="field-label">History</span><span class="field-value">recent ${escapeHtml(job.recent_history?.length || 0)}<span class="detail">archives retained ${escapeHtml(job.history_retention_days || 365)} days</span></span></div>
         <div><span class="field-label">Job file</span><span class="field-value"><code>${escapeHtml(job.file_path || "Unknown job path")}</code></span></div>
@@ -951,14 +971,14 @@ function renderJobAccordion(job, index) {
       <div class="management-panel">
         <div>
           <span class="field-label">Management</span>
-          <span class="field-value">This dashboard is static. Copy the edit, update the YAML, validate, then push.</span>
+          <span class="field-value">${job.deleted ? "This job file no longer exists. History is shown for reference." : "This dashboard is static. Copy the edit, update the YAML, validate, then push."}</span>
         </div>
-        <div class="management-actions">
+        ${job.deleted ? "" : `<div class="management-actions">
           <button type="button" class="secondary-action copy-toggle" data-job-index="${index}" data-next-enabled="${job.enabled ? "false" : "true"}">
             Copy ${job.enabled ? "disable" : "enable"} edit
           </button>
           <span class="management-note" data-toggle-note="${index}"></span>
-        </div>
+        </div>`}
       </div>
       <h3 class="section-title">History</h3>
       ${renderHistory(job, index)}
@@ -1022,6 +1042,7 @@ function renderJobs(jobs) {
     .map((job) => {
       const actualIndex = jobs.findIndex((candidate) => candidate.id === job.id);
       const status = effectiveStatus(job);
+      const state = schedulerState(job);
       const pausedUntil = status === "paused" ? renderTime(job.failure_pause_until_utc, job.timezone) : "";
       const disabledDetail = job.auto_disabled ? job.auto_disabled_reason || "Auto-disabled after failures" : "";
       const expanded = selectedJobId === job.id;
@@ -1037,10 +1058,11 @@ function renderJobs(jobs) {
               </div>
             </div>
             ${renderJobTimeBlock("Last run", job.last_evaluated_utc, job.timezone, triggerLabel(job.last_trigger))}
-            ${renderJobTimeBlock("Next due", job.enabled && !job.auto_disabled ? job.next_due_utc : null, job.timezone, job.enabled && !job.auto_disabled ? "" : `<span class="time-secondary">Disabled</span>`)}
+            ${renderJobTimeBlock("Next due", canSchedule(job) ? job.next_due_utc : null, job.timezone, canSchedule(job) ? "" : `<span class="time-secondary">${job.deleted ? "Deleted" : "Disabled"}</span>`)}
             <div class="job-health">
               <div class="job-status-stack">
-                ${badge(status)}
+                ${badge(state)}
+                <span class="detail">last result: ${escapeHtml(status)}</span>
                 ${disabledDetail ? `<span class="detail">${escapeHtml(disabledDetail)}</span>` : ""}
                 ${pausedUntil ? `<span class="detail">until ${pausedUntil}</span>` : ""}
               </div>
