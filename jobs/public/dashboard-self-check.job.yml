@@ -1,0 +1,14 @@
+id: cronjobs-dashboard-self-check
+name: "Cronjobs dashboard self-check"
+description: "Checks that the public GitHub Pages dashboard is reachable."
+enabled: true
+schedule: "*/15 * * * *"
+timezone: "Asia/Kolkata"
+type: http
+retries: 1
+retry_backoff_seconds: 30
+http:
+  method: GET
+  url: "https://dibyanshusinha.github.io/cronjobs/"
+  expected_status: [200]
+  timeout_seconds: 10
