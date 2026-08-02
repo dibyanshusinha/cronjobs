@@ -45,13 +45,24 @@
             <label>Folder under jobs/<input name="folder" value="examples" /></label>
             <label>Timezone<input name="timezone" /></label>
           </div>
-          <div class="form-row two">
-            <label>Type
-              <select name="type">
-                <option value="http">HTTP request</option>
-                <option value="script">Script</option>
-              </select>
+          <fieldset class="type-switcher">
+            <legend>Job type</legend>
+            <label class="type-option">
+              <input type="radio" name="type" value="http" checked />
+              <span>
+                <strong>HTTP request</strong>
+                <small>Ping a URL, send headers, validate status codes.</small>
+              </span>
             </label>
+            <label class="type-option">
+              <input type="radio" name="type" value="script" />
+              <span>
+                <strong>Script</strong>
+                <small>Run a checked-in Bash, Node, or Python script from <code>scripts/</code>.</small>
+              </span>
+            </label>
+          </fieldset>
+          <div class="form-row two">
             <label>Schedule
               <select name="preset">
                 <option value="*/5 * * * *">Every 5 minutes</option>
@@ -115,6 +126,7 @@
               </label>
             </div>
             <label>Arguments <span class="label-note">space separated</span><input name="args" value="--verbose" /></label>
+            <p class="help-inline">Script jobs execute inside GitHub Actions. The path must be committed under <code>scripts/</code>; inline shell commands are intentionally not supported.</p>
           </div>
 
           <details class="advanced-panel">
