@@ -467,6 +467,26 @@ function initBuilder() {
   updateBuilder();
 }
 
+function initDurationTooltips(root = document) {
+  root.querySelectorAll("[data-duration-chart]").forEach((chart) => {
+    const tooltip = chart.querySelector("[data-duration-tooltip]");
+    chart.querySelectorAll(".duration-point").forEach((point) => {
+      point.addEventListener("mouseenter", () => {
+        if (tooltip) tooltip.textContent = point.dataset.tooltip || "";
+      });
+      point.addEventListener("focus", () => {
+        if (tooltip) tooltip.textContent = point.dataset.tooltip || "";
+      });
+      point.addEventListener("mouseleave", () => {
+        if (tooltip) tooltip.textContent = "Hover a point for exact duration.";
+      });
+      point.addEventListener("blur", () => {
+        if (tooltip) tooltip.textContent = "Hover a point for exact duration.";
+      });
+    });
+  });
+}
+
 function effectiveStatus(job) {
   if (!job.enabled || job.auto_disabled) return "disabled";
   if (job.failure_pause_until_utc && new Date(job.failure_pause_until_utc) > new Date()) return "paused";
@@ -636,18 +656,49 @@ function renderJobDurationChart(job) {
     .filter((run) => run.status !== "skipped")
     .slice(-20);
   if (!runs.length) return `<div class="empty-state compact">No completed runs to chart yet.</div>`;
-  const durations = runs.map((run) => Number.isFinite(run.duration_ms) ? run.duration_ms : 0);
+  const durations = runs.map((run) => Number.isFinite(run.duration_ms) ? Math.max(0, run.duration_ms) : 0);
   const max = Math.max(1, ...durations);
+  const width = 640;
+  const height = 164;
+  const padX = 18;
+  const padY = 18;
+  const step = runs.length > 1 ? (width - padX * 2) / (runs.length - 1) : 0;
+  const points = durations.map((value, index) => {
+    const x = runs.length > 1 ? padX + index * step : width / 2;
+    const y = height - padY - (value / max) * (height - padY * 2);
+    return { x, y, value, run: runs[index] };
+  });
+  const path = points
+    .map((point, index) => `${index === 0 ? "M" : "L"} ${point.x.toFixed(1)} ${point.y.toFixed(1)}`)
+    .join(" ");
+  const areaPath = `${path} L ${points[points.length - 1].x.toFixed(1)} ${height - padY} L ${points[0].x.toFixed(1)} ${height - padY} Z`;
   return `
-    <div class="duration-chart">
-      ${runs
-        .map((run) => {
-          const height = Math.max(6, ((Number.isFinite(run.duration_ms) ? run.duration_ms : 0) / max) * 100);
-          return `
-            <span class="duration-bar ${escapeHtml(run.status || "unknown")}" style="height: ${height}%" title="${escapeHtml(run.status || "unknown")} - ${escapeHtml(duration(run.duration_ms))}"></span>
-          `;
-        })
-        .join("")}
+    <div class="duration-line-chart" data-duration-chart>
+      <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Recent duration line chart">
+        <line class="duration-grid" x1="${padX}" y1="${padY}" x2="${width - padX}" y2="${padY}"></line>
+        <line class="duration-grid" x1="${padX}" y1="${height / 2}" x2="${width - padX}" y2="${height / 2}"></line>
+        <line class="duration-grid" x1="${padX}" y1="${height - padY}" x2="${width - padX}" y2="${height - padY}"></line>
+        <path class="duration-area" d="${areaPath}"></path>
+        <path class="duration-line" d="${path}"></path>
+        ${points
+          .map((point) => `
+            <circle
+              class="duration-point ${escapeHtml(point.run.status || "unknown")}"
+              cx="${point.x.toFixed(1)}"
+              cy="${point.y.toFixed(1)}"
+              r="4"
+              data-tooltip="${escapeHtml(`${duration(point.run.duration_ms)} · ${point.run.status || "unknown"} · ${formatTime(point.run.finished_at || point.run.scheduled_time, job.timezone) || ""}`)}">
+              <title>${escapeHtml(point.run.status || "unknown")} - ${escapeHtml(duration(point.run.duration_ms))}</title>
+            </circle>
+          `)
+          .join("")}
+      </svg>
+      <div class="chart-scale">
+        <span>0 ms</span>
+        <span>${escapeHtml(duration(Math.round(max / 2)))}</span>
+        <span>${escapeHtml(duration(max))}</span>
+      </div>
+      <div class="duration-tooltip" data-duration-tooltip>Hover a point for exact duration.</div>
     </div>
   `;
 }
@@ -867,16 +918,14 @@ function renderJobs(jobs) {
         <h2>Jobs</h2>
         <p class="subtle">Filter by name or ID. Click a row to open its accordion.</p>
       </div>
-      <div class="jobs-tools">
+      <div class="jobs-toolbar">
         <label class="filter-field">
-          <span>Filter jobs</span>
-          <input id="job-filter" value="${escapeHtml(jobFilter)}" placeholder="Name, ID, path..." autocomplete="off" />
+          <span class="sr-only">Filter jobs</span>
+          <input id="job-filter" value="${escapeHtml(jobFilter)}" placeholder="Filter by name, ID, path..." autocomplete="off" />
         </label>
-        <div class="pager">
-          <button type="button" class="secondary-action" id="jobs-prev">Previous</button>
-          <span class="history-page-label">${start}-${end} of ${visibleJobs.length}</span>
-          <button type="button" class="secondary-action" id="jobs-next">Next</button>
-        </div>
+        <button type="button" class="secondary-action" id="jobs-prev">Previous</button>
+        <span class="history-page-label">${start}-${end} of ${visibleJobs.length}</span>
+        <button type="button" class="secondary-action" id="jobs-next">Next</button>
       </div>
     </div>
     <div class="jobs-list">
@@ -912,9 +961,6 @@ function renderJobs(jobs) {
             <div>
               <span class="field-label">Recent</span>
               ${renderJobStatsStrip(job)}
-            </div>
-            <div class="actions">
-              <span class="accordion-indicator" aria-hidden="true">${expanded ? "−" : "+"}</span>
             </div>
           </button>
           <div id="${detailsId}" ${expanded ? "" : "hidden"}>
@@ -982,6 +1028,7 @@ function renderJobs(jobs) {
   if (selectedJobId) {
     const index = jobs.findIndex((job) => job.id === selectedJobId);
     if (index >= 0) setHistoryPage(el, String(index), 0);
+    initDurationTooltips(el);
   }
 }
 
