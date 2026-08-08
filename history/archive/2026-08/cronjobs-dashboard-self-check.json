@@ -7463,6 +7463,18 @@
       "detail": "skipped by misfire policy (a more recent occurrence ran instead)",
       "trigger": "scheduled",
       "run_url": null
+    },
+    {
+      "job_id": "cronjobs-dashboard-self-check",
+      "scheduled_time": "2026-08-08T19:00:00.000Z",
+      "status": "success",
+      "started_at": "2026-08-08T19:08:27.332Z",
+      "finished_at": "2026-08-08T19:08:27.486Z",
+      "duration_ms": 154,
+      "attempts": 1,
+      "detail": "HTTP 200",
+      "trigger": "scheduled",
+      "run_url": "https://github.com/dibyanshusinha/cronjobs/actions/runs/31273676157"
     }
   ]
 }
