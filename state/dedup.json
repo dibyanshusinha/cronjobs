@@ -1,10 +1,5 @@
 {
   "executed": {
-    "example-backup-check|2026-08-01T22:54:27.916471Z": {
-      "claimed_at": "2026-08-01T22:54:27.916471Z",
-      "finished_at": "2026-08-01T22:54:27.916471Z",
-      "status": "success"
-    },
     "example-http-ping|2026-08-01T23:15:00Z": {
       "claimed_at": "2026-08-01T23:16:00.820682Z",
       "finished_at": "2026-08-01T23:16:00.820682Z",
@@ -611,9 +606,9 @@
       "finished_at": "2026-08-08T22:49:57.587Z"
     },
     "cronjobs-dashboard-self-check|2026-08-08T23:15:00.000Z": {
-      "status": "running",
+      "status": "success",
       "claimed_at": "2026-08-08T23:15:31.890Z",
-      "finished_at": null
+      "finished_at": "2026-08-08T23:15:31.890Z"
     }
   }
 }
