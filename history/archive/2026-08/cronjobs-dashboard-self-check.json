@@ -16283,6 +16283,18 @@
       "detail": "HTTP 200",
       "trigger": "scheduled",
       "run_url": "https://github.com/dibyanshusinha/cronjobs/actions/runs/31941898587"
+    },
+    {
+      "job_id": "cronjobs-dashboard-self-check",
+      "scheduled_time": "2026-08-16T10:45:00.000Z",
+      "status": "success",
+      "started_at": "2026-08-16T10:54:15.101Z",
+      "finished_at": "2026-08-16T10:54:15.241Z",
+      "duration_ms": 140,
+      "attempts": 1,
+      "detail": "HTTP 200",
+      "trigger": "scheduled",
+      "run_url": "https://github.com/dibyanshusinha/cronjobs/actions/runs/31942881937"
     }
   ]
 }
