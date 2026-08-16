@@ -2,42 +2,6 @@
   "runs": [
     {
       "job_id": "cronjobs-dashboard-self-check",
-      "scheduled_time": "2026-08-15T16:45:00.000Z",
-      "status": "skipped",
-      "started_at": null,
-      "finished_at": null,
-      "duration_ms": null,
-      "attempts": 0,
-      "detail": "skipped by misfire policy (a more recent occurrence ran instead)",
-      "trigger": "scheduled",
-      "run_url": null
-    },
-    {
-      "job_id": "cronjobs-dashboard-self-check",
-      "scheduled_time": "2026-08-15T17:00:00.000Z",
-      "status": "success",
-      "started_at": "2026-08-15T17:00:51.897Z",
-      "finished_at": "2026-08-15T17:00:51.997Z",
-      "duration_ms": 100,
-      "attempts": 1,
-      "detail": "HTTP 200",
-      "trigger": "scheduled",
-      "run_url": "https://github.com/dibyanshusinha/cronjobs/actions/runs/31897098214"
-    },
-    {
-      "job_id": "cronjobs-dashboard-self-check",
-      "scheduled_time": "2026-08-15T17:15:00.000Z",
-      "status": "success",
-      "started_at": "2026-08-15T17:29:51.552Z",
-      "finished_at": "2026-08-15T17:29:51.655Z",
-      "duration_ms": 103,
-      "attempts": 1,
-      "detail": "HTTP 200",
-      "trigger": "scheduled",
-      "run_url": "https://github.com/dibyanshusinha/cronjobs/actions/runs/31898458070"
-    },
-    {
-      "job_id": "cronjobs-dashboard-self-check",
       "scheduled_time": "2026-08-15T17:30:00.000Z",
       "status": "skipped",
       "started_at": null,
@@ -623,6 +587,18 @@
       "detail": "skipped by misfire policy (a more recent occurrence ran instead)",
       "trigger": "scheduled",
       "run_url": null
+    },
+    {
+      "job_id": "cronjobs-dashboard-self-check",
+      "scheduled_time": "2026-08-16T05:45:00.000Z",
+      "status": "success",
+      "started_at": "2026-08-16T05:47:08.712Z",
+      "finished_at": "2026-08-16T05:47:08.972Z",
+      "duration_ms": 260,
+      "attempts": 1,
+      "detail": "HTTP 200",
+      "trigger": "scheduled",
+      "run_url": "https://github.com/dibyanshusinha/cronjobs/actions/runs/31929809691"
     }
   ]
 }
