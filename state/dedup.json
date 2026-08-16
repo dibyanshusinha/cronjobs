@@ -984,6 +984,11 @@
       "status": "success",
       "claimed_at": "2026-08-16T11:18:24.484Z",
       "finished_at": "2026-08-16T11:18:24.484Z"
+    },
+    "cronjobs-dashboard-self-check|2026-08-16T11:30:00.000Z": {
+      "status": "running",
+      "claimed_at": "2026-08-16T11:40:28.348Z",
+      "finished_at": null
     }
   }
 }
