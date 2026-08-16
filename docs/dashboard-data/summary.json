@@ -1,7 +1,7 @@
 {
-  "generated_at": "2026-08-16T22:53:02.572Z",
+  "generated_at": "2026-08-16T23:14:50.738Z",
   "heartbeat": {
-    "last_run_utc": "2026-08-16T22:53:02.572Z",
+    "last_run_utc": "2026-08-16T23:14:50.738Z",
     "status": "ok",
     "detail": "1 executed, 0 skipped"
   },
@@ -24,25 +24,13 @@
         "backoff_multiplier": 2,
         "max_backoff_seconds": 21600
       },
-      "last_evaluated_utc": "2026-08-16T22:53:03.955Z",
+      "last_evaluated_utc": "2026-08-16T23:14:52.117Z",
       "last_status": "success",
       "last_trigger": "scheduled",
       "consecutive_failures": 0,
-      "next_due_utc": "2026-08-16T23:00:00.000Z",
+      "next_due_utc": "2026-08-16T23:15:00.000Z",
       "open_issue": null,
       "recent_history": [
-        {
-          "job_id": "cronjobs-dashboard-self-check",
-          "scheduled_time": "2026-08-16T10:30:00.000Z",
-          "status": "success",
-          "started_at": "2026-08-16T10:31:48.407Z",
-          "finished_at": "2026-08-16T10:31:48.487Z",
-          "duration_ms": 80,
-          "attempts": 1,
-          "detail": "HTTP 200",
-          "trigger": "scheduled",
-          "run_url": "https://github.com/dibyanshusinha/cronjobs/actions/runs/31941898587"
-        },
         {
           "job_id": "cronjobs-dashboard-self-check",
           "scheduled_time": "2026-08-16T10:45:00.000Z",
@@ -630,6 +618,18 @@
           "detail": "HTTP 200",
           "trigger": "scheduled",
           "run_url": "https://github.com/dibyanshusinha/cronjobs/actions/runs/31977553689"
+        },
+        {
+          "job_id": "cronjobs-dashboard-self-check",
+          "scheduled_time": "2026-08-16T23:00:00.000Z",
+          "status": "success",
+          "started_at": "2026-08-16T23:14:51.959Z",
+          "finished_at": "2026-08-16T23:14:52.117Z",
+          "duration_ms": 158,
+          "attempts": 1,
+          "detail": "HTTP 200",
+          "trigger": "scheduled",
+          "run_url": "https://github.com/dibyanshusinha/cronjobs/actions/runs/31978574297"
         }
       ]
     },
@@ -704,7 +704,7 @@
       "last_status": "failed",
       "last_trigger": "scheduled",
       "consecutive_failures": 1,
-      "next_due_utc": "2026-08-16T23:00:00.000Z",
+      "next_due_utc": "2026-08-16T23:15:00.000Z",
       "open_issue": 1,
       "recent_history": [
         {
@@ -1110,6 +1110,6 @@
     "executions_24h": 31,
     "success_rate_24h": 100,
     "failures_24h": 0,
-    "avg_duration_ms_24h": 161
+    "avg_duration_ms_24h": 164
   }
 }
