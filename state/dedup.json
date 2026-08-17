@@ -1,10 +1,5 @@
 {
   "executed": {
-    "cronjobs-dashboard-self-check|2026-08-10T11:30:00.000Z": {
-      "status": "success",
-      "claimed_at": "2026-08-10T11:38:26.782Z",
-      "finished_at": "2026-08-10T11:38:26.782Z"
-    },
     "cronjobs-dashboard-self-check|2026-08-10T12:30:00.000Z": {
       "status": "success",
       "claimed_at": "2026-08-10T12:31:27.157Z",
@@ -1076,9 +1071,9 @@
       "finished_at": "2026-08-17T11:33:39.601Z"
     },
     "cronjobs-dashboard-self-check|2026-08-17T11:45:00.000Z": {
-      "status": "running",
+      "status": "success",
       "claimed_at": "2026-08-17T11:55:21.054Z",
-      "finished_at": null
+      "finished_at": "2026-08-17T11:55:21.054Z"
     }
   }
 }
