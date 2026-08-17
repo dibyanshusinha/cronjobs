@@ -1,9 +1,9 @@
 {
-  "generated_at": "2026-08-17T16:32:30.386Z",
+  "generated_at": "2026-08-17T16:59:04.010Z",
   "heartbeat": {
-    "last_run_utc": "2026-08-17T16:32:30.386Z",
+    "last_run_utc": "2026-08-17T16:59:04.010Z",
     "status": "ok",
-    "detail": "1 executed, 2 skipped"
+    "detail": "1 executed, 0 skipped"
   },
   "jobs": [
     {
@@ -24,25 +24,13 @@
         "backoff_multiplier": 2,
         "max_backoff_seconds": 21600
       },
-      "last_evaluated_utc": "2026-08-17T16:32:36.038Z",
+      "last_evaluated_utc": "2026-08-17T16:59:05.405Z",
       "last_status": "success",
       "last_trigger": "scheduled",
       "consecutive_failures": 0,
-      "next_due_utc": "2026-08-17T16:45:00.000Z",
+      "next_due_utc": "2026-08-17T17:00:00.000Z",
       "open_issue": null,
       "recent_history": [
-        {
-          "job_id": "cronjobs-dashboard-self-check",
-          "scheduled_time": "2026-08-17T04:15:00.000Z",
-          "status": "success",
-          "started_at": "2026-08-17T04:22:07.328Z",
-          "finished_at": "2026-08-17T04:22:07.511Z",
-          "duration_ms": 183,
-          "attempts": 1,
-          "detail": "HTTP 200",
-          "trigger": "scheduled",
-          "run_url": "https://github.com/dibyanshusinha/cronjobs/actions/runs/31994206867"
-        },
         {
           "job_id": "cronjobs-dashboard-self-check",
           "scheduled_time": "2026-08-17T04:30:00.000Z",
@@ -630,6 +618,18 @@
           "detail": "HTTP 200",
           "trigger": "scheduled",
           "run_url": "https://github.com/dibyanshusinha/cronjobs/actions/runs/32046053939"
+        },
+        {
+          "job_id": "cronjobs-dashboard-self-check",
+          "scheduled_time": "2026-08-17T16:45:00.000Z",
+          "status": "success",
+          "started_at": "2026-08-17T16:59:05.198Z",
+          "finished_at": "2026-08-17T16:59:05.405Z",
+          "duration_ms": 207,
+          "attempts": 1,
+          "detail": "HTTP 200",
+          "trigger": "scheduled",
+          "run_url": "https://github.com/dibyanshusinha/cronjobs/actions/runs/32048193160"
         }
       ]
     },
@@ -704,7 +704,7 @@
       "last_status": "failed",
       "last_trigger": "scheduled",
       "consecutive_failures": 1,
-      "next_due_utc": "2026-08-17T16:45:00.000Z",
+      "next_due_utc": "2026-08-17T17:00:00.000Z",
       "open_issue": 1,
       "recent_history": [
         {
@@ -1110,6 +1110,6 @@
     "executions_24h": 20,
     "success_rate_24h": 100,
     "failures_24h": 0,
-    "avg_duration_ms_24h": 202
+    "avg_duration_ms_24h": 203
   }
 }
