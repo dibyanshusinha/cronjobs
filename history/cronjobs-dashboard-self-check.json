@@ -2,18 +2,6 @@
   "runs": [
     {
       "job_id": "cronjobs-dashboard-self-check",
-      "scheduled_time": "2026-08-18T04:30:00.000Z",
-      "status": "success",
-      "started_at": "2026-08-18T04:38:52.835Z",
-      "finished_at": "2026-08-18T04:38:53.040Z",
-      "duration_ms": 205,
-      "attempts": 1,
-      "detail": "HTTP 200",
-      "trigger": "scheduled",
-      "run_url": "https://github.com/dibyanshusinha/cronjobs/actions/runs/32099891743"
-    },
-    {
-      "job_id": "cronjobs-dashboard-self-check",
       "scheduled_time": "2026-08-18T04:45:00.000Z",
       "status": "skipped",
       "started_at": null,
@@ -599,6 +587,18 @@
       "detail": "HTTP 200",
       "trigger": "scheduled",
       "run_url": "https://github.com/dibyanshusinha/cronjobs/actions/runs/32162329553"
+    },
+    {
+      "job_id": "cronjobs-dashboard-self-check",
+      "scheduled_time": "2026-08-18T17:00:00.000Z",
+      "status": "success",
+      "started_at": "2026-08-18T17:14:33.994Z",
+      "finished_at": "2026-08-18T17:14:34.123Z",
+      "duration_ms": 129,
+      "attempts": 1,
+      "detail": "HTTP 200",
+      "trigger": "scheduled",
+      "run_url": "https://github.com/dibyanshusinha/cronjobs/actions/runs/32164542173"
     }
   ]
 }
