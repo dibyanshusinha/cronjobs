@@ -1,9 +1,9 @@
 {
-  "generated_at": "2026-08-21T21:54:56.604Z",
+  "generated_at": "2026-08-21T22:25:17.423Z",
   "heartbeat": {
-    "last_run_utc": "2026-08-21T21:54:56.604Z",
+    "last_run_utc": "2026-08-21T22:25:17.423Z",
     "status": "ok",
-    "detail": "1 executed, 0 skipped"
+    "detail": "1 executed, 1 skipped"
   },
   "jobs": [
     {
@@ -24,37 +24,13 @@
         "backoff_multiplier": 2,
         "max_backoff_seconds": 21600
       },
-      "last_evaluated_utc": "2026-08-21T21:54:57.907Z",
+      "last_evaluated_utc": "2026-08-21T22:25:18.651Z",
       "last_status": "success",
       "last_trigger": "scheduled",
       "consecutive_failures": 0,
-      "next_due_utc": "2026-08-21T22:00:00.000Z",
+      "next_due_utc": "2026-08-21T22:30:00.000Z",
       "open_issue": null,
       "recent_history": [
-        {
-          "job_id": "cronjobs-dashboard-self-check",
-          "scheduled_time": "2026-08-21T09:30:00.000Z",
-          "status": "success",
-          "started_at": "2026-08-21T09:30:33.831Z",
-          "finished_at": "2026-08-21T09:30:34.135Z",
-          "duration_ms": 304,
-          "attempts": 1,
-          "detail": "HTTP 200",
-          "trigger": "scheduled",
-          "run_url": "https://github.com/dibyanshusinha/cronjobs/actions/runs/32468197162"
-        },
-        {
-          "job_id": "cronjobs-dashboard-self-check",
-          "scheduled_time": "2026-08-21T09:45:00.000Z",
-          "status": "skipped",
-          "started_at": null,
-          "finished_at": null,
-          "duration_ms": null,
-          "attempts": 0,
-          "detail": "skipped by misfire policy (a more recent occurrence ran instead)",
-          "trigger": "scheduled",
-          "run_url": null
-        },
         {
           "job_id": "cronjobs-dashboard-self-check",
           "scheduled_time": "2026-08-21T10:00:00.000Z",
@@ -630,6 +606,30 @@
           "detail": "HTTP 200",
           "trigger": "scheduled",
           "run_url": "https://github.com/dibyanshusinha/cronjobs/actions/runs/32530666775"
+        },
+        {
+          "job_id": "cronjobs-dashboard-self-check",
+          "scheduled_time": "2026-08-21T22:00:00.000Z",
+          "status": "skipped",
+          "started_at": null,
+          "finished_at": null,
+          "duration_ms": null,
+          "attempts": 0,
+          "detail": "skipped by misfire policy (a more recent occurrence ran instead)",
+          "trigger": "scheduled",
+          "run_url": null
+        },
+        {
+          "job_id": "cronjobs-dashboard-self-check",
+          "scheduled_time": "2026-08-21T22:15:00.000Z",
+          "status": "success",
+          "started_at": "2026-08-21T22:25:18.546Z",
+          "finished_at": "2026-08-21T22:25:18.651Z",
+          "duration_ms": 105,
+          "attempts": 1,
+          "detail": "HTTP 200",
+          "trigger": "scheduled",
+          "run_url": "https://github.com/dibyanshusinha/cronjobs/actions/runs/32532868370"
         }
       ]
     },
@@ -704,7 +704,7 @@
       "last_status": "failed",
       "last_trigger": "scheduled",
       "consecutive_failures": 1,
-      "next_due_utc": "2026-08-21T22:00:00.000Z",
+      "next_due_utc": "2026-08-21T22:30:00.000Z",
       "open_issue": 1,
       "recent_history": [
         {
@@ -1110,6 +1110,6 @@
     "executions_24h": 23,
     "success_rate_24h": 100,
     "failures_24h": 0,
-    "avg_duration_ms_24h": 209
+    "avg_duration_ms_24h": 201
   }
 }
