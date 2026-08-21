@@ -17,8 +17,8 @@
     "auto_disabled": false,
     "auto_disabled_at_utc": null,
     "auto_disabled_reason": null,
-    "last_run_utc": "2026-08-21T14:40:59.751Z",
+    "last_run_utc": "2026-08-21T15:15:30.267Z",
     "last_trigger": "scheduled",
-    "last_evaluated_utc": "2026-08-21T14:40:56.480Z"
+    "last_evaluated_utc": "2026-08-21T15:15:28.921Z"
   }
 }
