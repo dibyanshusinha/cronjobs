@@ -2,42 +2,6 @@
   "runs": [
     {
       "job_id": "cronjobs-dashboard-self-check",
-      "scheduled_time": "2026-08-22T19:45:00.000Z",
-      "status": "success",
-      "started_at": "2026-08-22T19:49:19.260Z",
-      "finished_at": "2026-08-22T19:49:19.449Z",
-      "duration_ms": 189,
-      "attempts": 1,
-      "detail": "HTTP 200",
-      "trigger": "scheduled",
-      "run_url": "https://github.com/dibyanshusinha/cronjobs/actions/runs/32594830683"
-    },
-    {
-      "job_id": "cronjobs-dashboard-self-check",
-      "scheduled_time": "2026-08-22T20:00:00.000Z",
-      "status": "success",
-      "started_at": "2026-08-22T20:07:24.518Z",
-      "finished_at": "2026-08-22T20:07:24.691Z",
-      "duration_ms": 173,
-      "attempts": 1,
-      "detail": "HTTP 200",
-      "trigger": "scheduled",
-      "run_url": "https://github.com/dibyanshusinha/cronjobs/actions/runs/32595734452"
-    },
-    {
-      "job_id": "cronjobs-dashboard-self-check",
-      "scheduled_time": "2026-08-22T20:15:00.000Z",
-      "status": "skipped",
-      "started_at": null,
-      "finished_at": null,
-      "duration_ms": null,
-      "attempts": 0,
-      "detail": "skipped by misfire policy (a more recent occurrence ran instead)",
-      "trigger": "scheduled",
-      "run_url": null
-    },
-    {
-      "job_id": "cronjobs-dashboard-self-check",
       "scheduled_time": "2026-08-22T20:30:00.000Z",
       "status": "success",
       "started_at": "2026-08-22T20:37:23.232Z",
@@ -623,6 +587,18 @@
       "detail": "skipped by misfire policy (a more recent occurrence ran instead)",
       "trigger": "scheduled",
       "run_url": null
+    },
+    {
+      "job_id": "cronjobs-dashboard-self-check",
+      "scheduled_time": "2026-08-23T08:45:00.000Z",
+      "status": "success",
+      "started_at": "2026-08-23T08:51:08.894Z",
+      "finished_at": "2026-08-23T08:51:09.081Z",
+      "duration_ms": 187,
+      "attempts": 1,
+      "detail": "HTTP 200",
+      "trigger": "scheduled",
+      "run_url": "https://github.com/dibyanshusinha/cronjobs/actions/runs/32629359227"
     }
   ]
 }
