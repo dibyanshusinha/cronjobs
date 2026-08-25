@@ -1,9 +1,9 @@
 {
-  "generated_at": "2026-08-25T09:57:01.577Z",
+  "generated_at": "2026-08-25T10:38:55.498Z",
   "heartbeat": {
-    "last_run_utc": "2026-08-25T09:57:01.577Z",
+    "last_run_utc": "2026-08-25T10:38:55.498Z",
     "status": "ok",
-    "detail": "1 executed, 1 skipped"
+    "detail": "1 executed, 2 skipped"
   },
   "jobs": [
     {
@@ -24,49 +24,13 @@
         "backoff_multiplier": 2,
         "max_backoff_seconds": 21600
       },
-      "last_evaluated_utc": "2026-08-25T09:57:03.250Z",
+      "last_evaluated_utc": "2026-08-25T10:38:56.856Z",
       "last_status": "success",
       "last_trigger": "scheduled",
       "consecutive_failures": 0,
-      "next_due_utc": "2026-08-25T10:00:00.000Z",
+      "next_due_utc": "2026-08-25T10:45:00.000Z",
       "open_issue": null,
       "recent_history": [
-        {
-          "job_id": "cronjobs-dashboard-self-check",
-          "scheduled_time": "2026-08-24T21:30:00.000Z",
-          "status": "skipped",
-          "started_at": null,
-          "finished_at": null,
-          "duration_ms": null,
-          "attempts": 0,
-          "detail": "skipped by misfire policy (a more recent occurrence ran instead)",
-          "trigger": "scheduled",
-          "run_url": null
-        },
-        {
-          "job_id": "cronjobs-dashboard-self-check",
-          "scheduled_time": "2026-08-24T21:45:00.000Z",
-          "status": "success",
-          "started_at": "2026-08-24T21:46:41.089Z",
-          "finished_at": "2026-08-24T21:46:41.298Z",
-          "duration_ms": 209,
-          "attempts": 1,
-          "detail": "HTTP 200",
-          "trigger": "scheduled",
-          "run_url": "https://github.com/dibyanshusinha/cronjobs/actions/runs/32781278130"
-        },
-        {
-          "job_id": "cronjobs-dashboard-self-check",
-          "scheduled_time": "2026-08-24T22:00:00.000Z",
-          "status": "success",
-          "started_at": "2026-08-24T22:10:36.851Z",
-          "finished_at": "2026-08-24T22:10:37.177Z",
-          "duration_ms": 326,
-          "attempts": 1,
-          "detail": "HTTP 200",
-          "trigger": "scheduled",
-          "run_url": "https://github.com/dibyanshusinha/cronjobs/actions/runs/32783335840"
-        },
         {
           "job_id": "cronjobs-dashboard-self-check",
           "scheduled_time": "2026-08-24T22:15:00.000Z",
@@ -630,6 +594,42 @@
           "detail": "HTTP 200",
           "trigger": "scheduled",
           "run_url": "https://github.com/dibyanshusinha/cronjobs/actions/runs/32834646398"
+        },
+        {
+          "job_id": "cronjobs-dashboard-self-check",
+          "scheduled_time": "2026-08-25T10:00:00.000Z",
+          "status": "skipped",
+          "started_at": null,
+          "finished_at": null,
+          "duration_ms": null,
+          "attempts": 0,
+          "detail": "skipped by misfire policy (a more recent occurrence ran instead)",
+          "trigger": "scheduled",
+          "run_url": null
+        },
+        {
+          "job_id": "cronjobs-dashboard-self-check",
+          "scheduled_time": "2026-08-25T10:15:00.000Z",
+          "status": "skipped",
+          "started_at": null,
+          "finished_at": null,
+          "duration_ms": null,
+          "attempts": 0,
+          "detail": "skipped by misfire policy (a more recent occurrence ran instead)",
+          "trigger": "scheduled",
+          "run_url": null
+        },
+        {
+          "job_id": "cronjobs-dashboard-self-check",
+          "scheduled_time": "2026-08-25T10:30:00.000Z",
+          "status": "success",
+          "started_at": "2026-08-25T10:38:56.762Z",
+          "finished_at": "2026-08-25T10:38:56.856Z",
+          "duration_ms": 94,
+          "attempts": 1,
+          "detail": "HTTP 200",
+          "trigger": "scheduled",
+          "run_url": "https://github.com/dibyanshusinha/cronjobs/actions/runs/32838248144"
         }
       ]
     },
@@ -704,7 +704,7 @@
       "last_status": "failed",
       "last_trigger": "scheduled",
       "consecutive_failures": 1,
-      "next_due_utc": "2026-08-25T10:00:00.000Z",
+      "next_due_utc": "2026-08-25T10:45:00.000Z",
       "open_issue": 1,
       "recent_history": [
         {
@@ -1107,9 +1107,9 @@
   "meta": {
     "total_jobs": 3,
     "failing_jobs": 1,
-    "executions_24h": 18,
+    "executions_24h": 17,
     "success_rate_24h": 100,
     "failures_24h": 0,
-    "avg_duration_ms_24h": 197
+    "avg_duration_ms_24h": 182
   }
 }
