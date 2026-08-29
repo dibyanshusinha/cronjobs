@@ -1,45 +1,5 @@
 {
   "executed": {
-    "cronjobs-dashboard-self-check|2026-08-22T15:30:00.000Z": {
-      "status": "success",
-      "claimed_at": "2026-08-22T15:31:10.928Z",
-      "finished_at": "2026-08-22T15:31:10.928Z"
-    },
-    "cronjobs-dashboard-self-check|2026-08-22T15:45:00.000Z": {
-      "status": "success",
-      "claimed_at": "2026-08-22T15:52:12.288Z",
-      "finished_at": "2026-08-22T15:52:12.288Z"
-    },
-    "cronjobs-dashboard-self-check|2026-08-22T16:15:00.000Z": {
-      "status": "success",
-      "claimed_at": "2026-08-22T16:15:15.844Z",
-      "finished_at": "2026-08-22T16:15:15.844Z"
-    },
-    "cronjobs-dashboard-self-check|2026-08-22T16:30:00.000Z": {
-      "status": "success",
-      "claimed_at": "2026-08-22T16:43:55.914Z",
-      "finished_at": "2026-08-22T16:43:55.914Z"
-    },
-    "cronjobs-dashboard-self-check|2026-08-22T17:00:00.000Z": {
-      "status": "success",
-      "claimed_at": "2026-08-22T17:02:33.512Z",
-      "finished_at": "2026-08-22T17:02:33.512Z"
-    },
-    "cronjobs-dashboard-self-check|2026-08-22T17:30:00.000Z": {
-      "status": "success",
-      "claimed_at": "2026-08-22T17:32:01.366Z",
-      "finished_at": "2026-08-22T17:32:01.366Z"
-    },
-    "cronjobs-dashboard-self-check|2026-08-22T17:45:00.000Z": {
-      "status": "success",
-      "claimed_at": "2026-08-22T17:53:31.823Z",
-      "finished_at": "2026-08-22T17:53:31.823Z"
-    },
-    "cronjobs-dashboard-self-check|2026-08-22T18:15:00.000Z": {
-      "status": "success",
-      "claimed_at": "2026-08-22T18:24:34.118Z",
-      "finished_at": "2026-08-22T18:24:34.118Z"
-    },
     "cronjobs-dashboard-self-check|2026-08-22T18:45:00.000Z": {
       "status": "success",
       "claimed_at": "2026-08-22T18:58:25.449Z",
@@ -831,9 +791,9 @@
       "finished_at": "2026-08-29T15:20:51.967Z"
     },
     "cronjobs-dashboard-self-check|2026-08-29T18:30:00.000Z": {
-      "status": "running",
+      "status": "success",
       "claimed_at": "2026-08-29T18:42:18.882Z",
-      "finished_at": null
+      "finished_at": "2026-08-29T18:42:18.882Z"
     }
   }
 }
