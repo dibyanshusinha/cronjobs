@@ -1,0 +1,100 @@
+{
+  "runs": [
+    {
+      "job_id": "cronjobs-dashboard-self-check",
+      "scheduled_time": "2026-09-01T00:00:00.000Z",
+      "status": "skipped",
+      "started_at": null,
+      "finished_at": null,
+      "duration_ms": null,
+      "attempts": 0,
+      "detail": "skipped by misfire policy (a more recent occurrence ran instead)",
+      "trigger": "scheduled",
+      "run_url": null
+    },
+    {
+      "job_id": "cronjobs-dashboard-self-check",
+      "scheduled_time": "2026-09-01T00:15:00.000Z",
+      "status": "skipped",
+      "started_at": null,
+      "finished_at": null,
+      "duration_ms": null,
+      "attempts": 0,
+      "detail": "skipped by misfire policy (a more recent occurrence ran instead)",
+      "trigger": "scheduled",
+      "run_url": null
+    },
+    {
+      "job_id": "cronjobs-dashboard-self-check",
+      "scheduled_time": "2026-09-01T00:30:00.000Z",
+      "status": "skipped",
+      "started_at": null,
+      "finished_at": null,
+      "duration_ms": null,
+      "attempts": 0,
+      "detail": "skipped by misfire policy (a more recent occurrence ran instead)",
+      "trigger": "scheduled",
+      "run_url": null
+    },
+    {
+      "job_id": "cronjobs-dashboard-self-check",
+      "scheduled_time": "2026-09-01T00:45:00.000Z",
+      "status": "skipped",
+      "started_at": null,
+      "finished_at": null,
+      "duration_ms": null,
+      "attempts": 0,
+      "detail": "skipped by misfire policy (a more recent occurrence ran instead)",
+      "trigger": "scheduled",
+      "run_url": null
+    },
+    {
+      "job_id": "cronjobs-dashboard-self-check",
+      "scheduled_time": "2026-09-01T01:00:00.000Z",
+      "status": "skipped",
+      "started_at": null,
+      "finished_at": null,
+      "duration_ms": null,
+      "attempts": 0,
+      "detail": "skipped by misfire policy (a more recent occurrence ran instead)",
+      "trigger": "scheduled",
+      "run_url": null
+    },
+    {
+      "job_id": "cronjobs-dashboard-self-check",
+      "scheduled_time": "2026-09-01T01:15:00.000Z",
+      "status": "skipped",
+      "started_at": null,
+      "finished_at": null,
+      "duration_ms": null,
+      "attempts": 0,
+      "detail": "skipped by misfire policy (a more recent occurrence ran instead)",
+      "trigger": "scheduled",
+      "run_url": null
+    },
+    {
+      "job_id": "cronjobs-dashboard-self-check",
+      "scheduled_time": "2026-09-01T01:30:00.000Z",
+      "status": "skipped",
+      "started_at": null,
+      "finished_at": null,
+      "duration_ms": null,
+      "attempts": 0,
+      "detail": "skipped by misfire policy (a more recent occurrence ran instead)",
+      "trigger": "scheduled",
+      "run_url": null
+    },
+    {
+      "job_id": "cronjobs-dashboard-self-check",
+      "scheduled_time": "2026-09-01T01:45:00.000Z",
+      "status": "skipped",
+      "started_at": null,
+      "finished_at": null,
+      "duration_ms": null,
+      "attempts": 0,
+      "detail": "skipped by misfire policy (a more recent occurrence ran instead)",
+      "trigger": "scheduled",
+      "run_url": null
+    }
+  ]
+}
