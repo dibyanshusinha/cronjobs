@@ -154,6 +154,11 @@
       "status": "success",
       "claimed_at": "2026-11-04T23:55:46.689Z",
       "finished_at": "2026-11-04T23:55:46.689Z"
+    },
+    "cronjobs-dashboard-self-check|2026-11-05T05:30:00.000Z": {
+      "status": "running",
+      "claimed_at": "2026-11-05T05:44:22.261Z",
+      "finished_at": null
     }
   }
 }
